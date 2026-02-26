@@ -5,6 +5,17 @@
     "packageManager": "npm"
   },
   "newProjectRoot": "projects",
+  "schematics": {
+    "@schematics\\angular:component": {
+      "standalone": true
+    },
+    "@schematics\\angular:directive": {
+      "standalone": true
+    },
+    "@schematics\\angular:pipe": {
+      "standalone": true
+    }
+  },
   "projects": {
     "local-bite-frontend": {
       "projectType": "application",
@@ -26,7 +37,8 @@
             ],
             "styles": [
               "src/styles.css"
-            ]
+            ],
+            "polyfills": ["zone.js"]
           },
           "configurations": {
             "production": {
