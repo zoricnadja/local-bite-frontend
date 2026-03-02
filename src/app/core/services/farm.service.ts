@@ -20,4 +20,9 @@ export class FarmService {
   getById(id: string): Observable<ApiResponse<Farm>> {
     return this.http.get<ApiResponse<Farm>>(`${this.BASE}/${id}`);
   }
+
+  listWorkers(farmId: string): Observable<ApiResponse<WorkerOut>> {
+    // Backend returns workers array wrapped in standard ApiResponse; component will unwrap flexibly
+    return this.http.get<ApiResponse<WorkerOut>>(`${this.BASE}/${farmId}/workers`);
+  }
 }

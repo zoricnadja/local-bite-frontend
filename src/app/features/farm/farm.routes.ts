@@ -8,9 +8,14 @@ export const FARM_ROUTES: Routes = [
     loadComponent: () => import('./create/create-farm.component').then(m => m.CreateFarmComponent),
   },
   {
+    path: 'workers',
+    canActivate: [authGuard],
+    loadComponent: () => import('./workers/workers-list.component').then(m => m.WorkersListComponent),
+  },
+  {
     path: 'workers/add',
     canActivate: [authGuard],
     loadComponent: () => import('./workers/add-worker.component').then(m => m.AddWorkerComponent),
   },
-  { path: '', redirectTo: 'create', pathMatch: 'full' },
+  { path: '', redirectTo: 'workers', pathMatch: 'full' },
 ];

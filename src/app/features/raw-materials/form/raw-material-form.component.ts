@@ -3,7 +3,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { inject } from '@angular/core';
 import { RawMaterialsService } from '../../../core/services/raw-materials.service';
-import { RawMaterialRequest } from '../../../shared/models/raw-material.models'
+import {RawMaterial, RawMaterialRequest} from '../../../shared/models/raw-material.models'
 
 @Component({
   selector: 'app-raw-material-form',
@@ -39,7 +39,7 @@ export class RawMaterialFormComponent implements OnInit {
     this.id = this.route.snapshot.paramMap.get('id') ?? '';
     if (this.id) {
       this.isEdit.set(true);
-      this.svc.getById(this.id).subscribe(res => this.form.patchValue(res.data as any));
+      this.svc.getById(this.id).subscribe(res => this.form.patchValue((res.data as unknown as RawMaterial)));
     }
   }
 
@@ -52,14 +52,14 @@ export class RawMaterialFormComponent implements OnInit {
     let request : RawMaterialRequest = {
       name: raw.name!,
       material_type: raw.material_type!,
-      quantity: raw.quantity!,
+      quantity: Number(raw.quantity!),
       unit: raw.unit!,
       supplier: raw.supplier!,
       origin: raw.origin!,
       harvest_date: raw.harvest_date!,
       expiry_date: raw.expiry_date!,
       notes: raw.notes!,
-      low_stock_threshold: raw.low_stock_threshold!,
+      low_stock_threshold: Number(raw.low_stock_threshold!),
     };
     const obs = this.isEdit()
       ? this.svc.update(this.id, request)

@@ -43,13 +43,17 @@ export class RawMaterialsListComponent implements OnInit {
       limit: this.pageSize,
       search: this.search || undefined,
       material_type: this.typeFilter || undefined,
-    }).subscribe(res => {
-      let data = res.data;
-      if (this.showLowOnly) data = data.filter((m: RawMaterial) => this.isLow(m));
-      this.items.set(data);
-      this.total.set(res.total);
-      this.loading.set(false);
-    });
+    }).subscribe({
+      next: (res) =>
+      {
+        console.log(res.data)
+        let data = res.data.data;
+        if (this.showLowOnly) data = data.filter((m: RawMaterial) => this.isLow(m));
+        this.items.set(data);
+        this.total.set(res.data.total);
+        this.loading.set(false);
+      }
+  });
   }
 
   onSearch() {

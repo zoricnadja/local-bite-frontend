@@ -10,9 +10,9 @@ export class RawMaterialsService {
 
   constructor(private http: HttpClient) {}
 
-  list(query: RawMaterialListQuery = {}): Observable<PaginatedResponse<RawMaterial>> {
+  list(query: RawMaterialListQuery = {}): Observable<ApiResponse<RawMaterial>> {
     const params = this.buildParams(query as Record<string, unknown>);
-    return this.http.get<PaginatedResponse<RawMaterial>>(this.BASE, { params });
+    return this.http.get<ApiResponse<RawMaterial>>(this.BASE, { params });
   }
 
   lowStock(): Observable<RawMaterial[]> {

@@ -1,5 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { FarmService } from '../../../core/services/farm.service';
 import { AddWorkerRequest, WorkerOut } from '../../../shared/models/auth.models';
@@ -8,34 +9,43 @@ import { AuthService } from '../../../core/auth/auth.service';
 @Component({
   selector: 'app-add-worker',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink],
   template: `
     <div class="page">
-      <h1 class="page-title">Add Worker</h1>
+      <div class="page-header">
+        <h1 class="page-title">Add Worker</h1>
+        <a routerLink="/farm/workers" class="btn btn-secondary">← Back</a>
+      </div>
 
       <ng-container *ngIf="farmId() as fid; else noFarm">
-        <form [formGroup]="form" (ngSubmit)="onSubmit()" class="card">
+        <div class="card" style="max-width:720px">
+        <form [formGroup]="form" (ngSubmit)="onSubmit()" >
+          <div class="form-grid" style="grid-template-columns:1fr">
+          <div class="form-group">
           <label class="form-label">Worker email</label>
           <input class="input" formControlName="email" type="email" placeholder="worker@example.com" />
           <div class="hint error" *ngIf="form.controls.email.touched && form.controls.email.invalid">
             Valid email is required
           </div>
-
+          </div>
+          <div class="form-group">
           <label class="form-label">Password</label>
           <input class="input" formControlName="password" type="password" placeholder="At least 6 characters" />
           <div class="hint error" *ngIf="form.controls.password.touched && form.controls.password.invalid">
             Password is required (min 6 characters)
           </div>
-
+          </div>
+          <div class="form-group">
           <label class="form-label">Confirm password</label>
           <input class="input" formControlName="confirm" type="password" />
           <div class="hint error" *ngIf="confirmInvalid()">Passwords do not match</div>
-
+          </div>
           <button class="btn primary" type="submit" [disabled]="form.invalid || confirmInvalid() || loading()">
             {{ loading() ? 'Adding…' : 'Add worker' }}
           </button>
+          </div>
         </form>
-
+        </div>
         <div class="alert success" *ngIf="worker() as w">
           <strong>Worker created!</strong>
           <div>ID: {{ w.id }}</div>
@@ -53,9 +63,6 @@ import { AuthService } from '../../../core/auth/auth.service';
     </div>
   `,
   styles: [
-    `.page{max-width:640px;margin:24px auto;padding:0 16px}`,
-    `.page-title{margin-bottom:16px}`,
-    `.card{display:flex;flex-direction:column;gap:12px;padding:16px;border:1px solid var(--border,#ddd);border-radius:8px;background:var(--surface,#fff)}`,
     `.form-label{font-weight:600}`,
     `.input{padding:10px 12px;border:1px solid #ccc;border-radius:6px}`,
     `.btn{padding:10px 14px;border:none;border-radius:6px;cursor:pointer}`,
@@ -98,11 +105,11 @@ export class AddWorkerComponent {
     };
     this.farmApi.addWorker(fid, req).subscribe({
       next: (res) => {
-        this.worker.set(res.data);
+        this.worker.set(res.data as unknown as WorkerOut);
         this.loading.set(false);
       },
       error: (err) => {
-        const msg = err?.error?.message || err?.message || 'Failed to add worker';
+        const msg = err?.error?.error || err?.error || 'Failed to add worker';
         this.error.set(msg);
         this.loading.set(false);
       }
