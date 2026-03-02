@@ -24,6 +24,7 @@ export class AppComponent {
 
   private readonly NAV: NavItem[] = [
     { label: 'Dashboard',     icon: '📊', route: '/dashboard' },
+    { label: 'Profile',       icon: '👤', route: '/profile' },
     { label: 'Raw Materials', icon: '🌾', route: '/raw-materials' },
     { label: 'Production',    icon: '⚙️',  route: '/production' },
     { label: 'Products',      icon: '📦', route: '/products' },

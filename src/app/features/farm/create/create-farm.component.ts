@@ -2,7 +2,7 @@ import { Component, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { FarmService } from '../../../core/services/farm.service';
-import { CreateFarmRequest, Farm } from '../../../shared/models/auth.models';
+import {CreateFarmRequest, CreateFarmResult, Farm} from '../../../shared/models/auth.models';
 import { AuthService } from '../../../core/auth/auth.service';
 
 @Component({
@@ -69,15 +69,15 @@ export class CreateFarmComponent {
     this.farmApi.createFarm(req).subscribe({
       next: (res) => {
         // Save new token with farm_id and refresh user profile
-        this.auth.setToken(res.data.token);
-        this.farm.set(res.data.farm);
+        this.auth.setToken((res.data.data as unknown as CreateFarmResult).token);
+        this.farm.set((res.data.data as unknown as CreateFarmResult).farm);
         this.auth.refreshUser().subscribe({
           next: () => this.loading.set(false),
           error: () => this.loading.set(false),
         });
       },
       error: (err) => {
-        const msg = err?.error?.message || err?.message || 'Failed to create farm';
+        const msg = err?.error?.error || err?.error || 'Failed to create farm';
         this.error.set(msg);
         this.loading.set(false);
       }

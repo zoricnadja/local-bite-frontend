@@ -35,8 +35,8 @@ export class DashboardComponent implements OnInit {
       next: ({ lowStock, analytics, batches, products }) => {
         this.lowStockItems.set(lowStock);
         this.stats.set({
-          totalOrders:   analytics.data.total_orders,
-          revenue:       analytics.data.total_revenue,
+          totalOrders:   (analytics.data.data.map(a => a.total_orders)).length,
+          revenue:       (analytics.data.data.map(t => t.total_revenue)).length,
           activeBatches: batches.total,
           totalProducts: products.total,
         });

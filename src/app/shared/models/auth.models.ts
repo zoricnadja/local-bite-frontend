@@ -35,6 +35,11 @@ export interface CreateFarmRequest {
   name: string;
 }
 
+export interface CreateFarmResult {
+  farm: Farm;
+  token: string;
+}
+
 export interface AddWorkerRequest {
   email: string;
   password: string;
