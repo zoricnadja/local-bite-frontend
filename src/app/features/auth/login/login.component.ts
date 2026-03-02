@@ -28,7 +28,12 @@ export class LoginComponent {
     this.error.set('');
 
     this.auth.login(this.form.getRawValue() as any).subscribe({
-      next: () => this.router.navigate(['/dashboard']),
+      next: () => {
+        this.auth.refreshUser().subscribe({
+          next: () => this.router.navigate(['/dashboard']),
+          error: () => this.loading.set(false),
+        });
+      },
       error: (e) => {
         this.error.set(e.error?.error ?? 'Login failed');
         this.loading.set(false);
