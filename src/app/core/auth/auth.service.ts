@@ -41,6 +41,12 @@ export class AuthService {
     return this.http.get<User>(`${this.BASE}/me`);
   }
 
+  refreshUser(): Observable<User> {
+    return this.me().pipe(
+      tap(user => this.setUser(user))
+    );
+  }
+
   logout(): void {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
@@ -50,9 +56,18 @@ export class AuthService {
   }
 
   private persist(token: string, user: User): void {
+    this.setToken(token)
+    this.setUser(user)
+    console.log(token)
+  }
+
+  setToken(token: string): void {
     localStorage.setItem(TOKEN_KEY, token);
-    localStorage.setItem(USER_KEY, JSON.stringify(user));
     this._token.set(token);
+  }
+
+  private setUser(user: User): void {
+    localStorage.setItem(USER_KEY, JSON.stringify(user));
     this._user.set(user);
   }
 

@@ -39,3 +39,10 @@ export interface AddWorkerRequest {
   email: string;
   password: string;
 }
+
+export interface WorkerOut {
+  id: string;
+  email: string;
+  role: 'WORKER';
+  farm_id: string;
+}
