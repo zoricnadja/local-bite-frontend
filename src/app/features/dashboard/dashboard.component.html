@@ -1,0 +1,94 @@
+<div class="page">
+    <div class="page-header">
+    <div>
+        <h1 class="page-title">Good morning 🌿</h1>
+        <p class="page-subtitle">Here's what's happening on your farm today.</p>
+    </div>
+    </div>
+
+    @if (loading()) {
+    <div class="empty-state"><span class="spinner" style="width:32px;height:32px"></span></div>
+    } @else {
+    <!-- Summary cards -->
+    <div class="stats-grid">
+        <div class="stat-card">
+        <div class="stat-icon">🛒</div>
+        <div class="stat-content">
+            <div class="stat-value">{{ stats().totalOrders }}</div>
+            <div class="stat-label">Total Orders</div>
+        </div>
+        <a routerLink="/orders" class="stat-link">View →</a>
+        </div>
+
+        <div class="stat-card">
+        <div class="stat-icon">💰</div>
+        <div class="stat-content">
+            <div class="stat-value">{{ stats().revenue | currency:'EUR' }}</div>
+            <div class="stat-label">Revenue (Delivered)</div>
+        </div>
+        <a routerLink="/orders/analytics" class="stat-link">Analytics →</a>
+        </div>
+
+        <div class="stat-card">
+        <div class="stat-icon">⚙️</div>
+        <div class="stat-content">
+            <div class="stat-value">{{ stats().activeBatches }}</div>
+            <div class="stat-label">Active Batches</div>
+        </div>
+        <a routerLink="/production" class="stat-link">View →</a>
+        </div>
+
+        <div class="stat-card">
+        <div class="stat-icon">📦</div>
+        <div class="stat-content">
+            <div class="stat-value">{{ stats().totalProducts }}</div>
+            <div class="stat-label">Products Listed</div>
+        </div>
+        <a routerLink="/products" class="stat-link">View →</a>
+        </div>
+    </div>
+
+    <!-- Low stock alert -->
+    @if (lowStockItems().length > 0) {
+        <div class="alert alert-warning" style="margin-top:24px">
+        <span style="font-size:1.2rem">⚠️</span>
+        <div>
+            <strong>Low stock alert:</strong>
+            {{ lowStockItems().length }} material{{ lowStockItems().length === 1 ? '' : 's' }} running low —
+            <a routerLink="/raw-materials">{{ lowStockItems().slice(0,3).map(m => m.name).join(', ') }}{{ lowStockItems().length > 3 ? '...' : '' }}</a>
+        </div>
+        </div>
+    }
+
+    <!-- Recent low stock list -->
+    @if (lowStockItems().length > 0) {
+        <div class="card" style="margin-top:24px">
+        <h3 style="margin-bottom:16px">⚠️ Low Stock Materials</h3>
+        <table>
+            <thead>
+            <tr>
+                <th>Name</th>
+                <th>Type</th>
+                <th>Quantity</th>
+                <th>Threshold</th>
+                <th></th>
+            </tr>
+            </thead>
+            <tbody>
+            @for (m of lowStockItems(); track m.id) {
+                <tr>
+                <td><strong>{{ m.name }}</strong></td>
+                <td><span class="badge badge-warning">{{ m.material_type }}</span></td>
+                <td class="font-mono">{{ m.quantity }} {{ m.unit }}</td>
+                <td class="font-mono text-muted">{{ m.low_stock_threshold }} {{ m.unit }}</td>
+                <td>
+                    <a [routerLink]="['/raw-materials', m.id, 'edit']" class="btn btn-sm btn-secondary">Restock</a>
+                </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+        </div>
+    }
+    }
+</div>

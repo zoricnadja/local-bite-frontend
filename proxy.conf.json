@@ -1,0 +1,27 @@
+{
+  "/api/auth": {
+    "target": "http://localhost:3001",
+    "pathRewrite": { "^/api/auth": "" },
+    "changeOrigin": true
+  },
+  "/api/raw-materials": {
+    "target": "http://localhost:3002",
+    "pathRewrite": { "^/api/raw-materials": "" },
+    "changeOrigin": true
+  },
+  "/api/production": {
+    "target": "http://localhost:3003",
+    "pathRewrite": { "^/api/production": "" },
+    "changeOrigin": true
+  },
+  "/api/products": {
+    "target": "http://localhost:3004",
+    "pathRewrite": { "^/api/products": "" },
+    "changeOrigin": true
+  },
+  "/api/orders": {
+    "target": "http://localhost:3005",
+    "pathRewrite": { "^/api/orders": "" },
+    "changeOrigin": true
+  }
+}

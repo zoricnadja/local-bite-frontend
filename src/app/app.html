@@ -1,0 +1,35 @@
+<div class="app-shell" [class.no-nav]="!isLoggedIn()">
+
+      @if (isLoggedIn()) {
+        <aside class="sidebar">
+          <div class="sidebar-brand">
+            <span class="brand-icon">🌿</span>
+            <span class="brand-name">Local Bite</span>
+          </div>
+
+          <nav class="sidebar-nav">
+            @for (item of visibleNav(); track item.route) {
+              <a class="nav-item"
+                 [routerLink]="item.route"
+                 routerLinkActive="active"
+                 [routerLinkActiveOptions]="{ exact: item.route === '/dashboard' }">
+                <span class="nav-icon">{{ item.icon }}</span>
+                <span class="nav-label">{{ item.label }}</span>
+              </a>
+            }
+          </nav>
+
+          <div class="sidebar-footer">
+            <div class="user-info">
+              <div class="user-email">{{ user()?.email }}</div>
+              <div class="user-role">{{ user()?.role }}</div>
+            </div>
+            <button class="logout-btn" (click)="logout()">↩</button>
+          </div>
+        </aside>
+      }
+
+      <main class="main-content">
+        <router-outlet />
+      </main>
+    </div>

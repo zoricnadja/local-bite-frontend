@@ -1,0 +1,97 @@
+<div class="page">
+    <div class="page-header">
+    <div>
+        <h1 class="page-title">Raw Materials</h1>
+        <p class="page-subtitle">{{ total() }} materials in inventory</p>
+    </div>
+    <a routerLink="new" class="btn btn-primary">+ Add Material</a>
+    </div>
+
+    <!-- Low stock banner -->
+    @if (lowStockCount() > 0) {
+    <div class="alert alert-warning" style="margin-bottom:20px">
+        ⚠️ <strong>{{ lowStockCount() }} material{{ lowStockCount() === 1 ? '' : 's' }}</strong> below threshold
+    </div>
+    }
+
+    <!-- Filters -->
+    <div class="search-bar">
+    <input class="search-input" [(ngModel)]="search" (ngModelChange)="onSearch()"
+            placeholder="Search materials..." />
+    <select class="form-control" style="width:auto" [(ngModel)]="typeFilter" (ngModelChange)="load()">
+        <option value="">All types</option>
+        <option value="meat">Meat</option>
+        <option value="dairy">Dairy</option>
+        <option value="vegetable">Vegetable</option>
+        <option value="fruit">Fruit</option>
+        <option value="grain">Grain</option>
+        <option value="spice">Spice</option>
+        <option value="other">Other</option>
+    </select>
+    <label class="low-stock-toggle">
+        <input type="checkbox" [(ngModel)]="showLowOnly" (ngModelChange)="load()" />
+        Low stock only
+    </label>
+    </div>
+
+    <!-- Table -->
+    <div class="table-wrapper">
+    @if (loading()) {
+        <div class="empty-state"><span class="spinner" style="width:28px;height:28px"></span></div>
+    } @else if (items().length === 0) {
+        <div class="empty-state">
+        <div class="empty-state-icon">🌾</div>
+        <div class="empty-state-text">No materials found</div>
+        </div>
+    } @else {
+        <table>
+        <thead>
+            <tr>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Quantity</th>
+            <th>Supplier</th>
+            <th>Origin</th>
+            <th>Expiry</th>
+            <th>Status</th>
+            <th></th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (m of items(); track m.id) {
+            <tr [class.low-stock-row]="isLow(m)">
+                <td><strong>{{ m.name }}</strong></td>
+                <td><span class="badge badge-planned">{{ m.material_type }}</span></td>
+                <td class="font-mono">{{ m.quantity }} {{ m.unit }}</td>
+                <td class="text-muted">{{ m.supplier ?? '—' }}</td>
+                <td class="text-muted">{{ m.origin ?? '—' }}</td>
+                <td class="text-muted text-sm">{{ m.expiry_date ?? '—' }}</td>
+                <td>
+                @if (isLow(m)) {
+                    <span class="badge badge-warning">⚠ Low</span>
+                } @else {
+                    <span class="badge badge-completed">OK</span>
+                }
+                </td>
+                <td>
+                <div class="actions">
+                    <a [routerLink]="[m.id, 'edit']" class="btn btn-sm btn-ghost" title="Edit">✏️</a>
+                    <button class="btn btn-sm btn-ghost" (click)="confirmDelete(m)" title="Delete">🗑️</button>
+                </div>
+                </td>
+            </tr>
+            }
+        </tbody>
+        </table>
+    }
+    </div>
+
+    <!-- Pagination -->
+    @if (total() > pageSize) {
+    <div class="pagination">
+        <button class="btn btn-sm btn-secondary" [disabled]="page() === 1" (click)="setPage(page()-1)">← Prev</button>
+        <span class="page-info">Page {{ page() }} of {{ totalPages() }}</span>
+        <button class="btn btn-sm btn-secondary" [disabled]="page() === totalPages()" (click)="setPage(page()+1)">Next →</button>
+    </div>
+    }
+</div>

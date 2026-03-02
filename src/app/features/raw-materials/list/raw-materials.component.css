@@ -1,0 +1,4 @@
+.low-stock-row td:first-child { border-left: 3px solid var(--warning); padding-left: 13px; }
+.low-stock-toggle { display:flex; align-items:center; gap:6px; font-size:0.875rem; color:var(--text-secondary); cursor:pointer; white-space:nowrap; }
+.pagination { display:flex; align-items:center; gap:12px; margin-top:20px; justify-content:center; }
+.page-info { font-size:0.875rem; color:var(--text-muted); }
