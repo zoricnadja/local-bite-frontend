@@ -6,7 +6,7 @@ import { RawMaterialListQuery, RawMaterial, RawMaterialRequest, AdjustQuantityRe
 
 @Injectable({ providedIn: 'root' })
 export class RawMaterialsService {
-  private readonly BASE = '/api/raw-materials/raw-materials';
+  private readonly BASE = '/api/raw-materials';
 
   constructor(private http: HttpClient) {}
 

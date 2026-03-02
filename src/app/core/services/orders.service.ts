@@ -6,7 +6,7 @@ import { OrderListQuery, Order, CreateOrderRequest, UpdateStatusRequest, Analyti
 
 @Injectable({ providedIn: 'root' })
 export class OrdersService {
-  private readonly BASE = '/api/orders/orders';
+  private readonly BASE = '/api/orders';
 
   constructor(private http: HttpClient) {}
 

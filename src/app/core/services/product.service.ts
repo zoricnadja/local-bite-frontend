@@ -6,7 +6,7 @@ import { ProductListQuery, Product, ProvenanceResponse, CreateProductRequest, Up
 
 @Injectable({ providedIn: 'root' })
 export class ProductService {
-  private readonly BASE = '/api/products/products';
+  private readonly BASE = '/api/products';
 
   constructor(private http: HttpClient) {}
 
