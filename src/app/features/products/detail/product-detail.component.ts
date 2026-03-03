@@ -240,7 +240,7 @@ export class ProductDetailComponent implements OnInit {
   }
 
   imageUrl(): string {
-    return '/api/products' + this.product()!.image_path;
+    return this.svc.imageUrl(this.product()!.id);
   }
 
   qrUrl(): string {

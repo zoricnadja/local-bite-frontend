@@ -41,6 +41,10 @@ export class ProductService {
     return this.http.post<ApiResponse<Product>>(`${this.BASE}/${id}/image`, form);
   }
 
+  imageUrl(id: string): string {
+    return `${this.BASE}/${id}/image`;
+  }
+
   qrUrl(id: string): string {
     return `${this.BASE}/${id}/qr`;
   }

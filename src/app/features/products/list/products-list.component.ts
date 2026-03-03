@@ -159,7 +159,7 @@ export class ProductsListComponent implements OnInit {
   setPage(p: number) { this.page.set(p); this.load(); }
 
   imageUrl(p: Product): string {
-    return '/api/products' + p.image_path;
+    return this.svc.imageUrl(p!.id);
   }
 
   confirmDelete(p: Product) {
