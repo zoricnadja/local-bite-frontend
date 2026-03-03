@@ -2,7 +2,7 @@ import { Component, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { FarmService } from '../../../core/services/farm.service';
-import {CreateFarmRequest, Farm} from '../../../shared/models/auth.models';
+import { CreateFarmRequest, Farm } from '../../../shared/models/auth.models';
 import { AuthService } from '../../../core/auth/auth.service';
 
 @Component({

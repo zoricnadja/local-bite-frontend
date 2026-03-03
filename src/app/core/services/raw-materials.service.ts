@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { ApiResponse } from '../../shared/models/api.models';
+import {ApiResponse, PaginatedResponse} from '../../shared/models/api.models';
 import { RawMaterialListQuery, RawMaterial, RawMaterialRequest, AdjustQuantityRequest } from '../../shared/models/raw-material.models';
 
 @Injectable({ providedIn: 'root' })
