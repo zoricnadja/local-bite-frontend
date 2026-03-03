@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Order, OrderStatus, ORDER_STATUS_TRANSITIONS } from '../../../shared/models/order.models';
 import {OrdersService} from "../../../core/services/orders.service";
+import {AuthService} from "../../../core/auth/auth.service";
 
 @Component({
   selector: 'app-order-detail',
@@ -22,7 +23,7 @@ import {OrdersService} from "../../../core/services/orders.service";
               &nbsp;· {{ order()!.created_at | date:'medium' }}
             </p>
           </div>
-          <div class="actions">
+          <div class="actions" *ngIf="!isCustomer">
             @if (canDelete()) {
               <button class="btn btn-danger" (click)="confirmDelete()">🗑️ Delete</button>
             }
@@ -30,7 +31,7 @@ import {OrdersService} from "../../../core/services/orders.service";
         </div>
 
         <!-- Status stepper -->
-        <div class="card" style="margin-bottom:20px">
+        <div class="card" style="margin-bottom:20px" *ngIf="!isCustomer">
           <div class="stepper">
             @for (s of allStatuses; track s) {
               <div class="step" [class.active]="order()!.status === s" [class.done]="isPast(s)">
@@ -138,13 +139,14 @@ import {OrdersService} from "../../../core/services/orders.service";
 })
 export class OrderDetailComponent implements OnInit {
   private svc    = inject(OrdersService);
+  private auth    = inject(AuthService);
   private route  = inject(ActivatedRoute);
   private router = inject(Router);
 
   order    = signal<Order | null>(null);
   loading  = signal(true);
   updating = signal(false);
-
+  isCustomer: boolean = false;
   readonly allStatuses: OrderStatus[] = ['PENDING', 'CONFIRMED', 'SHIPPED', 'DELIVERED'];
   readonly statusOrder = ['PENDING', 'CONFIRMED', 'SHIPPED', 'DELIVERED', 'CANCELLED'];
 
@@ -171,6 +173,7 @@ export class OrderDetailComponent implements OnInit {
 
   ngOnInit() {
     this.id = this.route.snapshot.paramMap.get('id')!;
+    this.isCustomer = this.auth.isCustomer()
     this.load();
   }
 

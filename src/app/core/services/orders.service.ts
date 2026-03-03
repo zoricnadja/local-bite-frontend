@@ -2,7 +2,14 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { PaginatedResponse, ApiResponse } from '../../shared/models/api.models';
-import { OrderListQuery, Order, CreateOrderRequest, UpdateStatusRequest, AnalyticsResponse } from '../../shared/models/order.models';
+import {
+  OrderListQuery,
+  Order,
+  CreateOrderRequest,
+  UpdateStatusRequest,
+  AnalyticsResponse,
+  CreatesOrdersResponse
+} from '../../shared/models/order.models';
 
 @Injectable({ providedIn: 'root' })
 export class OrdersService {
@@ -15,12 +22,17 @@ export class OrdersService {
     return this.http.get<ApiResponse<PaginatedResponse<Order>>>(this.BASE, { params });
   }
 
+  getAllByUser(userId: string, query: OrderListQuery = {}): Observable<ApiResponse<PaginatedResponse<Order>>> {
+    const params = this.buildParams(query as Record<string, unknown>);
+    return this.http.get<ApiResponse<PaginatedResponse<Order>>>(`${this.BASE}/user/${userId}`, { params });
+  }
+
   getById(id: string): Observable<ApiResponse<Order>> {
     return this.http.get<ApiResponse<Order>>(`${this.BASE}/${id}`);
   }
 
-  create(req: CreateOrderRequest): Observable<ApiResponse<Order>> {
-    return this.http.post<ApiResponse<Order>>(this.BASE, req);
+  create(req: CreateOrderRequest): Observable<ApiResponse<CreatesOrdersResponse>> {
+    return this.http.post<ApiResponse<CreatesOrdersResponse>>(this.BASE, req);
   }
 
   updateStatus(id: string, req: UpdateStatusRequest): Observable<ApiResponse<Order>> {

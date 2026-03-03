@@ -15,6 +15,11 @@ export class ProductService {
     return this.http.get<PaginatedResponse<Product>>(this.BASE, { params });
   }
 
+  listByFarm(query: ProductListQuery = {}): Observable<PaginatedResponse<Product>> {
+    const params = this.buildParams(query as Record<string, unknown>);
+    return this.http.get<PaginatedResponse<Product>>(`${this.BASE}/farm`, { params });
+  }
+
   getById(id: string): Observable<ApiResponse<Product>> {
     return this.http.get<ApiResponse<Product>>(`${this.BASE}/${id}`);
   }

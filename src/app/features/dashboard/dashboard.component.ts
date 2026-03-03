@@ -34,7 +34,7 @@ export class DashboardComponent implements OnInit {
       lowStock:    this.rawMaterialsSvc.lowStock(),
       analytics:   this.ordersSvc.analytics(),
       batches:     this.productionSvc.listBatches({ status: 'IN_PROGRESS', limit: 1 }),
-      products:    this.productSvc.list({ limit: 1 }),
+      products:    this.productSvc.listByFarm({ limit: 1 }),
     }).subscribe({
       next: ({ lowStock, analytics, batches, products }) => {
         this.lowStockItems.set(lowStock);

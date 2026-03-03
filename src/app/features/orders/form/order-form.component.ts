@@ -222,7 +222,11 @@ export class OrderFormComponent implements OnInit {
     }).subscribe({
       next:  res => {
         console.log(res)
-        this.router.navigate(['/orders', (res.data as unknown as Order).id])
+        if (res.data.orders.length === 1) {
+          this.router.navigate(['/orders', res.data.orders[0].id]);
+        } else {
+          this.router.navigate(['/orders']); // multiple farms — go to list
+        }
       },
       error: (e) => { this.error.set(e.error?.error ?? 'Failed to place order'); this.submitting.set(false); },
     });

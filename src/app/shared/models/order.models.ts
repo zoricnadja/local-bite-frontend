@@ -25,6 +25,10 @@ export interface Order {
   updated_at: string;
 }
 
+export interface CreatesOrdersResponse {
+  orders: Order[];
+}
+
 export interface CreateOrderRequest {
   customer_id?: string;
   customer_name?: string;

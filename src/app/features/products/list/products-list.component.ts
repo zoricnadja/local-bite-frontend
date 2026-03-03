@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { ProductService } from '../../../core/services/product.service';
 import { Product } from '../../../shared/models/product.models';
 import {PaginatedResponse} from "../../../shared/models/api.models";
+import {AuthService} from "../../../core/auth/auth.service";
 
 @Component({
   selector: 'app-products-list',
@@ -116,6 +117,7 @@ import {PaginatedResponse} from "../../../shared/models/api.models";
 })
 export class ProductsListComponent implements OnInit {
   private svc = inject(ProductService);
+  private authSvc = inject(AuthService);
 
   items    = signal<Product[]>([]);
   loading  = signal(true);
@@ -134,21 +136,41 @@ export class ProductsListComponent implements OnInit {
 
   load() {
     this.loading.set(true);
-    this.svc.list({
-      page:         this.page(),
-      limit:        this.pageSize,
-      search:       this.search       || undefined,
-      product_type: this.typeFilter   || undefined,
-      active_only:  this.activeOnly   || undefined,
-    }).subscribe({
-      next:  res => {
-        let data = res.data as unknown as PaginatedResponse<Product>
-        this.items.set(data.data);
-        this.total.set(data.total);
-        this.loading.set(false);
-      },
-      error: ()  => this.loading.set(false),
-    });
+    console.log(this.authSvc.isCustomer())
+    if (this.authSvc.isCustomer()){
+      this.svc.list({
+        page: this.page(),
+        limit: this.pageSize,
+        search: this.search || undefined,
+        product_type: this.typeFilter || undefined,
+        active_only: this.activeOnly || undefined,
+      }).subscribe({
+        next: res => {
+          let data = res.data as unknown as PaginatedResponse<Product>
+          this.items.set(data.data);
+          this.total.set(data.total);
+          this.loading.set(false);
+        },
+        error: () => this.loading.set(false),
+      });
+    }
+    else {
+      this.svc.listByFarm({
+        page: this.page(),
+        limit: this.pageSize,
+        search: this.search || undefined,
+        product_type: this.typeFilter || undefined,
+        active_only: this.activeOnly || undefined,
+      }).subscribe({
+        next: res => {
+          let data = res.data as unknown as PaginatedResponse<Product>
+          this.items.set(data.data);
+          this.total.set(data.total);
+          this.loading.set(false);
+        },
+        error: () => this.loading.set(false),
+      });
+    }
   }
 
   onSearch() {

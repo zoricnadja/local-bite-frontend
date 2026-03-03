@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { Order, OrderStatus } from '../../../shared/models/order.models';
 import {OrdersService} from "../../../core/services/orders.service";
+import {AuthService} from "../../../core/auth/auth.service";
 
 @Component({
   selector: 'app-orders-list',
@@ -102,6 +103,7 @@ import {OrdersService} from "../../../core/services/orders.service";
 })
 export class OrdersListComponent implements OnInit {
   private svc = inject(OrdersService);
+  private authSvc = inject(AuthService);
 
   items    = signal<Order[]>([]);
   loading  = signal(true);
@@ -119,15 +121,32 @@ export class OrdersListComponent implements OnInit {
 
   load() {
     this.loading.set(true);
-    this.svc.list({
-      page:   this.page(),
-      limit:  this.pageSize,
-      search: this.search       || undefined,
-      status: (this.statusFilter || undefined) as OrderStatus | undefined,
-    }).subscribe({
-      next:  res => { console.log(res); console.log(res.data);this.items.set(res.data.data); this.total.set(res.data.total); this.loading.set(false); },
-      error: ()  => this.loading.set(false),
-    });
+    console.log(this.authSvc.isCustomer())
+    if (this.authSvc.isCustomer()) {
+      this.svc.getAllByUser(this.authSvc.id()!, {
+        page:   this.page(),
+        limit:  this.pageSize,
+        search: this.search       || undefined,
+        status: (this.statusFilter || undefined) as OrderStatus | undefined,
+      }).subscribe({
+        next:  res => { this.items.set(res.data.data); this.total.set(res.data.total); this.loading.set(false); },
+        error: ()  => this.loading.set(false),
+      });
+    } else {
+      this.svc.list({
+        page: this.page(),
+        limit: this.pageSize,
+        search: this.search || undefined,
+        status: (this.statusFilter || undefined) as OrderStatus | undefined,
+      }).subscribe({
+        next: res => {
+          this.items.set(res.data.data);
+          this.total.set(res.data.total);
+          this.loading.set(false);
+        },
+        error: () => this.loading.set(false),
+      });
+    }
   }
 
   onSearch() {
