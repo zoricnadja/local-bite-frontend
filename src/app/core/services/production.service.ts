@@ -6,7 +6,7 @@ import { BatchListQuery, ProductionBatch, CreateBatchRequest, UpdateBatchRequest
 
 @Injectable({ providedIn: 'root' })
 export class ProductionService {
-  private readonly BASE = '/api/production';
+  private readonly BASE = '/api/productions';
 
   constructor(private http: HttpClient) {}
 
