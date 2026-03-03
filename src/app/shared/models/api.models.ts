@@ -6,5 +6,5 @@ export interface PaginatedResponse<T> {
 }
 
 export interface ApiResponse<T> {
-  data: PaginatedResponse<T>;
+  data: T;
 }

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { PaginatedResponse, ApiResponse } from '../../shared/models/api.models';
+import { ApiResponse } from '../../shared/models/api.models';
 import { RawMaterialListQuery, RawMaterial, RawMaterialRequest, AdjustQuantityRequest } from '../../shared/models/raw-material.models';
 
 @Injectable({ providedIn: 'root' })
@@ -10,9 +10,9 @@ export class RawMaterialsService {
 
   constructor(private http: HttpClient) {}
 
-  list(query: RawMaterialListQuery = {}): Observable<ApiResponse<RawMaterial>> {
+  list(query: RawMaterialListQuery = {}): Observable<ApiResponse<PaginatedResponse<RawMaterial>>> {
     const params = this.buildParams(query as Record<string, unknown>);
-    return this.http.get<ApiResponse<RawMaterial>>(this.BASE, { params });
+    return this.http.get<ApiResponse<PaginatedResponse<RawMaterial>>>(this.BASE, { params });
   }
 
   lowStock(): Observable<RawMaterial[]> {

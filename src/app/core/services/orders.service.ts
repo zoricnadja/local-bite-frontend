@@ -10,9 +10,9 @@ export class OrdersService {
 
   constructor(private http: HttpClient) {}
 
-  list(query: OrderListQuery = {}): Observable<PaginatedResponse<Order>> {
+  list(query: OrderListQuery = {}): Observable<ApiResponse<PaginatedResponse<Order>>> {
     const params = this.buildParams(query as Record<string, unknown>);
-    return this.http.get<PaginatedResponse<Order>>(this.BASE, { params });
+    return this.http.get<ApiResponse<PaginatedResponse<Order>>>(this.BASE, { params });
   }
 
   getById(id: string): Observable<ApiResponse<Order>> {
