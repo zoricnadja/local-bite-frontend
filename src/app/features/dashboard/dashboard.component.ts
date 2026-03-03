@@ -7,6 +7,10 @@ import { ProductService } from '../../core/services/product.service';
 import { ProductionService } from '../../core/services/production.service';
 import { RawMaterialsService } from '../../core/services/raw-materials.service';
 import { RawMaterial } from '../../shared/models/raw-material.models';
+import {AnalyticsResponse} from "../../shared/models/order.models";
+import {PaginatedResponse} from "../../shared/models/api.models";
+import {BatchStatus} from "../../shared/models/production.models";
+import {Product} from "../../shared/models/product.models";
 
 @Component({
   selector: 'app-dashboard',
@@ -35,10 +39,10 @@ export class DashboardComponent implements OnInit {
       next: ({ lowStock, analytics, batches, products }) => {
         this.lowStockItems.set(lowStock);
         this.stats.set({
-          totalOrders:   (analytics.data.data.map(a => a.total_orders)).length,
-          revenue:       (analytics.data.data.map(t => t.total_revenue)).length,
-          activeBatches: batches.total,
-          totalProducts: products.total,
+          totalOrders:   (analytics.data as unknown as AnalyticsResponse).total_orders,
+          revenue:       (analytics.data as unknown as AnalyticsResponse).total_revenue,
+          activeBatches: (batches.data as unknown as PaginatedResponse<BatchStatus>).total,
+          totalProducts: (products.data as unknown as PaginatedResponse<Product>).total,
         });
         this.loading.set(false);
       },
