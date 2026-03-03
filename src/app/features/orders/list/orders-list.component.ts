@@ -121,7 +121,6 @@ export class OrdersListComponent implements OnInit {
 
   load() {
     this.loading.set(true);
-    console.log(this.authSvc.isCustomer())
     if (this.authSvc.isCustomer()) {
       this.svc.getAllByUser(this.authSvc.id()!, {
         page:   this.page(),
