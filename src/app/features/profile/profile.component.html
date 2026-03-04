@@ -1,0 +1,237 @@
+<div class="page">
+    <h1 class="page-title">Profile</h1>
+
+    <!-- ── User card ─────────────────────────────────────────────────────────── -->
+    <div class="card">
+
+        <!-- VIEW mode -->
+        @if (!editingUser()) {
+            <div class="card-header">
+                <div class="avatar">
+                    @if (currentUser()?.photo_url) {
+                        <img [src]="currentUser()!.photo_url" alt="avatar" />
+                    } @else {
+                        <span>{{ initials() }}</span>
+                    }
+                </div>
+                <div>
+                    <div class="full-name">{{ currentUser()?.first_name }} {{ currentUser()?.last_name }}</div>
+                    <div class="meta">{{ currentUser()?.role }}</div>
+                </div>
+                <button class="btn btn-ghost ml-auto" (click)="startEditUser()">Edit</button>
+            </div>
+
+            <div class="field-grid">
+                <div class="field">
+                    <span class="field-label">Email</span>
+                    <span>{{ currentUser()?.email }}</span>
+                </div>
+                <div class="field">
+                    <span class="field-label">Address</span>
+                    <span>{{ currentUser()?.address }}</span>
+                </div>
+                @if (currentUser()?.phone) {
+                    <div class="field">
+                        <span class="field-label">Phone</span>
+                        <span>{{ currentUser()?.phone }}</span>
+                    </div>
+                }
+                @if (currentUser()?.date_of_birth) {
+                    <div class="field">
+                        <span class="field-label">Date of birth</span>
+                        <span>{{ currentUser()?.date_of_birth | date:'mediumDate' }}</span>
+                    </div>
+                }
+                <div class="field">
+                    <span class="field-label">Member since</span>
+                    <span>{{ currentUser()?.created_at | date:'mediumDate' }}</span>
+                </div>
+            </div>
+
+            <!-- Delete account -->
+            <div class="danger-zone">
+                <span class="danger-label">Danger zone</span>
+                @if (!confirmDeleteUser()) {
+                    <button class="btn btn-danger-ghost" (click)="confirmDeleteUser.set(true)">Delete account</button>
+                } @else {
+                    <div class="confirm-row">
+                        <span>Are you sure? This cannot be undone.</span>
+                        <button class="btn btn-danger" (click)="deleteUser()" [disabled]="deleting()">
+                            {{ deleting() ? 'Deleting…' : 'Yes, delete' }}
+                        </button>
+                        <button class="btn btn-ghost" (click)="confirmDeleteUser.set(false)">Cancel</button>
+                    </div>
+                    @if (deleteError()) {
+                        <div class="error-msg">{{ deleteError() }}</div>
+                    }
+                }
+            </div>
+        }
+
+        <!-- EDIT mode -->
+        @if (editingUser()) {
+            <h2 class="section-title">Edit profile</h2>
+            <form [formGroup]="userForm" (ngSubmit)="saveUser()">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">First name *</label>
+                        <input class="form-control" formControlName="first_name" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Last name *</label>
+                        <input class="form-control" formControlName="last_name" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email *</label>
+                    <input class="form-control" type="email" formControlName="email" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Address *</label>
+                    <input class="form-control" formControlName="address" />
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Phone</label>
+                        <input class="form-control" type="tel" formControlName="phone" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Date of birth</label>
+                        <input class="form-control" type="date" formControlName="date_of_birth" />
+                    </div>
+                </div>
+
+                @if (userError()) {
+                    <div class="error-msg">{{ userError() }}</div>
+                }
+
+                <div class="btn-row">
+                    <button class="btn btn-primary" type="submit" [disabled]="userForm.invalid || userSaving()">
+                        {{ userSaving() ? 'Saving…' : 'Save changes' }}
+                    </button>
+                    <button class="btn btn-ghost" type="button" (click)="cancelEditUser()">Cancel</button>
+                </div>
+            </form>
+        }
+    </div>
+
+    <!-- ── Farm card ─────────────────────────────────────────────────────────── -->
+    <div class="card">
+        <h2 class="section-title">Farm</h2>
+
+        @if (farmLoading()) {
+            <div class="hint">Loading farm…</div>
+
+        } @else if (farmError()) {
+            <div class="error-msg">{{ farmError() }}</div>
+
+        } @else if (!farmId()) {
+            <div class="empty-state">You don't have a farm yet.</div>
+            <a class="btn btn-primary" style="margin-top:12px;display:inline-block" routerLink="/farm/create">Add farm</a>
+
+        } @else if (farm(); as f) {
+
+            <!-- VIEW mode -->
+            @if (!editingFarm()) {
+                @if (f.photo_url) {
+                    <img class="farm-photo" [src]="f.photo_url" alt="farm photo" />
+                }
+                <div class="farm-header">
+                    <div class="full-name">{{ f.name }}</div>
+                    <button class="btn btn-ghost" (click)="startEditFarm()">Edit</button>
+                </div>
+
+                <div class="field-grid" style="margin-top:12px">
+                    <div class="field">
+                        <span class="field-label">Address</span>
+                        <span>{{ f.address }}</span>
+                    </div>
+                    @if (f.phone) {
+                        <div class="field">
+                            <span class="field-label">Phone</span>
+                            <span>{{ f.phone }}</span>
+                        </div>
+                    }
+                    @if (f.description) {
+                        <div class="field" style="grid-column:1/-1">
+                            <span class="field-label">Description</span>
+                            <span>{{ f.description }}</span>
+                        </div>
+                    }
+                    @if (f.website) {
+                        <div class="field">
+                            <span class="field-label">Website</span>
+                            <a [href]="f.website" target="_blank" rel="noopener">{{ f.website }}</a>
+                        </div>
+                    }
+                    <div class="field">
+                        <span class="field-label">Created</span>
+                        <span>{{ f.created_at | date:'mediumDate' }}</span>
+                    </div>
+                </div>
+
+                <!-- Delete farm -->
+                <div class="danger-zone">
+                    <span class="danger-label">Danger zone</span>
+                    @if (!confirmDeleteFarm()) {
+                        <button class="btn btn-danger-ghost" (click)="confirmDeleteFarm.set(true)">Delete farm</button>
+                    } @else {
+                        <div class="confirm-row">
+                            <span>Are you sure? This cannot be undone.</span>
+                            <button class="btn btn-danger" (click)="deleteFarm()" [disabled]="deleting()">
+                                {{ deleting() ? 'Deleting…' : 'Yes, delete' }}
+                            </button>
+                            <button class="btn btn-ghost" (click)="confirmDeleteFarm.set(false)">Cancel</button>
+                        </div>
+                        @if (deleteError()) {
+                            <div class="error-msg">{{ deleteError() }}</div>
+                        }
+                    }
+                </div>
+            }
+
+            <!-- EDIT mode -->
+            @if (editingFarm()) {
+                <form [formGroup]="farmForm" (ngSubmit)="saveFarm()">
+                    <div class="form-group">
+                        <label class="form-label">Farm name *</label>
+                        <input class="form-control" formControlName="name" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Address *</label>
+                        <input class="form-control" formControlName="address" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Photo URL *</label>
+                        <input class="form-control" formControlName="photo_url" placeholder="https://…" />
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">Phone</label>
+                            <input class="form-control" type="tel" formControlName="phone" />
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Website</label>
+                            <input class="form-control" type="url" formControlName="website" placeholder="https://…" />
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" formControlName="description" rows="3"></textarea>
+                    </div>
+
+                    @if (farmSaveError()) {
+                        <div class="error-msg">{{ farmSaveError() }}</div>
+                    }
+
+                    <div class="btn-row">
+                        <button class="btn btn-primary" type="submit" [disabled]="farmForm.invalid || farmSaving()">
+                            {{ farmSaving() ? 'Saving…' : 'Save changes' }}
+                        </button>
+                        <button class="btn btn-ghost" type="button" (click)="cancelEditFarm()">Cancel</button>
+                    </div>
+                </form>
+            }
+        }
+    </div>
+</div>
