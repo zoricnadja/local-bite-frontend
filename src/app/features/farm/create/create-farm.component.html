@@ -21,17 +21,6 @@
             }
         </div>
 
-        <div class="form-group">
-            <label class="form-label">Photo URL *</label>
-            <input class="form-control" formControlName="photo_url" type="url" placeholder="https://…" />
-            @if (form.controls.photo_url.touched && form.controls.photo_url.invalid) {
-                <span class="field-error">Photo URL is required</span>
-            }
-            @if (form.controls.photo_url.value) {
-                <img class="photo-preview" [src]="form.controls.photo_url.value" alt="preview" />
-            }
-        </div>
-
         <div class="section-label" style="margin-top:8px">Optional details</div>
 
         <div class="form-row">

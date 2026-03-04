@@ -26,7 +26,6 @@ export class CreateFarmComponent {
   form = this.fb.group({
     name:        ['', [Validators.required, Validators.minLength(2)]],
     address:     ['', Validators.required],
-    photo_url:   ['', Validators.required],
     phone:       [''],
     description: [''],
     website:     [''],
@@ -41,7 +40,6 @@ export class CreateFarmComponent {
     this.farmSvc.createFarm({
       name:        v.name!,
       address:     v.address!,
-      photo_url:   v.photo_url!,
       phone:       v.phone       || undefined,
       description: v.description || undefined,
       website:     v.website     || undefined,

@@ -25,7 +25,6 @@ export interface Farm {
 
   // Required
   address:   string;
-  photo_url: string;
 
   // Optional
   phone:       string | null;
@@ -88,7 +87,6 @@ export interface WorkerOut {
 export interface UpdateFarmRequest {
   name?:        string;
   address?:     string;
-  photo_url?:   string;
   phone?:       string;
   description?: string;
   website?:     string;
@@ -97,7 +95,6 @@ export interface UpdateFarmRequest {
 export interface CreateFarmRequest {
   name:       string;
   address:    string;
-  photo_url:  string;
   phone?:     string;
   description?: string;
   website?:   string;

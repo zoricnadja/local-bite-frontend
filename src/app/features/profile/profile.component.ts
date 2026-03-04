@@ -10,7 +10,7 @@ import {FarmService} from "../../core/services/farm.service";
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, RouterLink, DatePipe, ReactiveFormsModule],
+  imports: [CommonModule, DatePipe, ReactiveFormsModule, RouterLink],
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.css'],
 })
@@ -57,7 +57,6 @@ export class ProfileComponent {
   farmForm = this.fb.group({
     name:        ['', Validators.required],
     address:     ['', Validators.required],
-    photo_url:   ['', Validators.required],
     phone:       [''],
     description: [''],
     website:     [''],
@@ -134,7 +133,6 @@ export class ProfileComponent {
     this.farmForm.setValue({
       name:        f.name,
       address:     f.address,
-      photo_url:   f.photo_url,
       phone:       f.phone       ?? '',
       description: f.description ?? '',
       website:     f.website     ?? '',
@@ -154,7 +152,6 @@ export class ProfileComponent {
     const req: UpdateFarmRequest = {
       name:        v.name!,
       address:     v.address!,
-      photo_url:   v.photo_url!,
       phone:       v.phone       || undefined,
       description: v.description || undefined,
       website:     v.website     || undefined,

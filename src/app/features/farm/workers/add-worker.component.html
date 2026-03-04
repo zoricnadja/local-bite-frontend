@@ -1,0 +1,76 @@
+<div class="page">
+    <div class="page-header">
+        <div>
+            <h1 class="page-title"> Add Worker</h1>
+        </div>
+        <a routerLink="/farm/workers" class="btn btn-secondary">← Back</a>
+    </div>
+
+    <div class="card" style="max-width:720px">
+        <form [formGroup]="form" (ngSubmit)="submit()" style="max-width:720px">
+
+            <!-- Account -->
+            <div class="section-label">Account</div>
+
+            <div class="form-group">
+                <label class="form-label">Email *</label>
+                <input class="form-control" type="email" formControlName="email" placeholder="you@example.com" />
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Password *</label>
+                <input class="form-control" type="password" formControlName="password" placeholder="••••••••" />
+            </div>
+
+            <!-- Profile -->
+            <div class="section-label" style="margin-top:20px">Profile</div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">First name *</label>
+                    <input class="form-control" type="text" formControlName="first_name" placeholder="Jane" />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Last name *</label>
+                    <input class="form-control" type="text" formControlName="last_name" placeholder="Doe" />
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Address *</label>
+                <input class="form-control" type="text" formControlName="address" placeholder="123 Main St, City" />
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Phone <span class="optional">(optional)</span></label>
+                <input class="form-control" type="tel" formControlName="phone" placeholder="+1 555 000 0000" />
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Date of birth <span class="optional">(optional)</span></label>
+                <input class="form-control" type="date" formControlName="date_of_birth" />
+            </div>
+
+            @if (error()) {
+                <div class="alert alert-danger" style="margin-top:14px">{{ error() }}</div>
+            }
+
+            <button
+                    class="btn btn-primary"
+                    style="width:100%;margin-top:20px;justify-content:center"
+                    type="submit"
+                    [disabled]="loading() || form.invalid">
+                @if (loading()) { <span class="spinner"></span> }
+                Add worker
+            </button>
+        </form>
+        <div class="alert success" *ngIf="worker() as w">
+            <strong>Worker created!</strong>
+            <div>ID: {{ w.id }}</div>
+            <div>Email: {{ w.email }}</div>
+        </div>
+
+        <div class="alert error" *ngIf="error()">{{ error() }}</div>
+
+    </div>
+</div>
