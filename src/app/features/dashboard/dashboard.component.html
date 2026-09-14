@@ -1,15 +1,55 @@
 <div class="page">
     <div class="page-header">
     <div>
-        <h1 class="page-title">Good morning 🌿</h1>
-        <p class="page-subtitle">Here's what's happening on your farm today.</p>
+        <h1 class="page-title">{{ auth.isCustomer() ? 'Your local food corner' : isWorker ? 'Your work overview' : 'Farm overview' }}</h1>
+        <p class="page-subtitle">{{ auth.isCustomer() ? 'Browse local products and follow your orders.' : isWorker ? 'Keep production moving and check materials that need attention.' : 'Here is what is happening on your farm.' }}</p>
     </div>
     </div>
 
     @if (loading()) {
     <div class="empty-state"><span class="spinner" style="width:32px;height:32px"></span></div>
-    } @else {
-    <!-- Summary cards -->
+    } @else if (error()) {<div class="alert alert-warning" role="alert">Could not load your dashboard. <button class="btn btn-secondary" (click)="load()">Try again</button></div>} @else {
+    @if (auth.isCustomer()) {
+  <div class="dashboard-actions">
+    <a routerLink="/products" class="btn btn-primary">Browse products</a>
+    <a routerLink="/orders/new" class="btn btn-secondary">Place an order</a>
+    <a routerLink="/orders" class="btn btn-secondary">My orders</a>
+  </div>
+  <section class="card dashboard-section">
+    <h2>My recent orders</h2>
+    <p class="text-muted">Your five most recent orders. Open an order to see its items and delivery status.</p>
+    @for (order of recentOrders(); track order.id) {
+      <a class="dashboard-row" [routerLink]="['/orders', order.id]">
+        <div><strong>Order #{{ order.id.slice(0, 8) }}</strong><div class="text-muted">{{ order.created_at | date:'mediumDate' }}</div></div>
+        <span class="badge" [class]="'badge badge-' + order.status.toLowerCase()">{{ order.status | titlecase }}</span>
+        <strong>{{ order.total_price | currency:'EUR' }}</strong>
+        <span>View →</span>
+      </a>
+    } @empty {
+      <div class="empty-state"><h3>No orders yet</h3><p>Discover food from local farms and place your first order.</p><a routerLink="/products" class="btn btn-primary">Explore products</a></div>
+    }
+  </section>
+  <section class="card dashboard-section"><h2>Know where your food comes from</h2><p class="text-muted">Open a product to explore its origin and production details before you order.</p><a routerLink="/products" class="stat-link">Explore local food →</a></section>
+} @else {
+@if (isWorker) {
+  <div class="dashboard-actions"><a routerLink="/production" class="btn btn-primary">Open production</a><a routerLink="/raw-materials" class="btn btn-secondary">Check materials</a></div>
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-value">{{ stats().activeBatches }}</div><div class="stat-label">Batches in progress</div></div>
+    <div class="stat-card"><div class="stat-value">{{ plannedCount() }}</div><div class="stat-label">Planned batches</div></div>
+    <div class="stat-card"><div class="stat-value">{{ lowStockItems().length }}</div><div class="stat-label">Materials running low</div><a routerLink="/raw-materials" class="stat-link">Check stock →</a></div>
+  </div>
+  <div class="work-grid">
+    @for (section of [{ title: 'In progress', items: activeBatches() }, { title: 'Planned production', items: plannedBatches() }]; track section.title) {
+      <section class="card dashboard-section"><h2>{{ section.title }}</h2><p class="text-muted">Up to five batches. Open a batch to review its process and materials.</p>
+        @for (batch of section.items; track batch.id) {
+          <a class="dashboard-row" [routerLink]="['/production', batch.id]"><div><strong>{{ batch.name }}</strong><div class="text-muted">{{ batch.process_type | titlecase }}</div><div class="text-muted">Start: {{ batch.start_date ? (batch.start_date | date:'mediumDate') : 'Not scheduled' }}</div></div><span>Open →</span></a>
+        } @empty { <p class="empty-state">No batches {{ section.title === 'In progress' ? 'in progress' : 'planned' }}.</p> }
+      </section>
+    }
+  </div>
+  @if (lowStockItems().length === 0) { <div class="card dashboard-section">No low-stock alerts. Check materials before starting a batch.</div> }
+} @else {
+<!-- Summary cards -->
     <div class="stats-grid">
         <div class="stat-card">
         <div class="stat-icon">🛒</div>
@@ -48,14 +88,14 @@
         </div>
     </div>
 
-    <!-- Low stock alert -->
+    } <!-- Low stock alert -->
     @if (lowStockItems().length > 0) {
         <div class="alert alert-warning" style="margin-top:24px">
         <span style="font-size:1.2rem">⚠️</span>
         <div>
             <strong>Low stock alert:</strong>
             {{ lowStockItems().length }} material{{ lowStockItems().length === 1 ? '' : 's' }} running low —
-            <a routerLink="/raw-materials">{{ lowStockItems().slice(0,3).map(m => m.name).join(', ') }}{{ lowStockItems().length > 3 ? '...' : '' }}</a>
+            <a routerLink="/raw-materials">{{ lowStockNames }}{{ lowStockItems().length > 3 ? '...' : '' }}</a>
         </div>
         </div>
     }
@@ -64,7 +104,7 @@
     @if (lowStockItems().length > 0) {
         <div class="card" style="margin-top:24px">
         <h3 style="margin-bottom:16px">⚠️ Low Stock Materials</h3>
-        <table>
+        <div class="table-wrapper"><table>
             <thead>
             <tr>
                 <th>Name</th>
@@ -87,8 +127,9 @@
                 </tr>
             }
             </tbody>
-        </table>
+        </table></div>
         </div>
+    }
     }
     }
 </div>
