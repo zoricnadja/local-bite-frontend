@@ -28,6 +28,14 @@ export class ProductService {
     return this.http.get<ApiResponse<ProvenanceResponse>>(`${this.BASE}/${id}/provenance`);
   }
 
+  getPublicProvenance(qrToken: string): Observable<ApiResponse<ProvenanceResponse>> {
+    return this.http.get<ApiResponse<ProvenanceResponse>>(`${this.BASE}/public/${qrToken}`);
+  }
+
+  publicCertificateUrl(qrToken: string): string {
+    return `${this.BASE}/public/${qrToken}/certificate.pdf`;
+  }
+
   create(req: CreateProductRequest): Observable<ApiResponse<Product>> {
     return this.http.post<ApiResponse<Product>>(this.BASE, req);
   }

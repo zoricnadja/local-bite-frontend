@@ -3,6 +3,11 @@ import { authGuard } from './core/auth/auth.guard';
 
 export const routes: Routes = [
   {
+    path: 'trace/:qrToken',
+    loadComponent: () =>
+      import('./features/public-trace/public-trace.component').then(m => m.PublicTraceComponent),
+  },
+  {
     path: 'profile',
     canActivate: [authGuard],
     loadComponent: () =>
