@@ -18,7 +18,7 @@
                     <div class="full-name">{{ currentUser()?.first_name }} {{ currentUser()?.last_name }}</div>
                     <div class="meta">{{ currentUser()?.role }}</div>
                 </div>
-                <button class="btn btn-ghost ml-auto" (click)="startEditUser()">Edit</button>
+                <button class="icon-action ml-auto" (click)="startEditUser()" aria-label="Edit" title="Edit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m16 3 5 5-13 13H3v-5L16 3ZM13 6l5 5"/></svg></button>
             </div>
 
             <div class="field-grid">
@@ -52,13 +52,11 @@
             <div class="danger-zone" *ngIf="currentUser()?.role !== 'Worker'">
 
                 @if (!confirmDeleteUser()) {
-                    <button class="btn btn-danger-ghost" (click)="confirmDeleteUser.set(true)">Delete account</button>
+                    <button class="icon-action" (click)="confirmDeleteUser.set(true)" aria-label="Delete account" title="Delete account"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/></svg></button>
                 } @else {
                     <div class="confirm-row">
                         <span>Are you sure? This cannot be undone.</span>
-                        <button class="btn btn-danger" (click)="deleteUser()" [disabled]="deleting()">
-                            {{ deleting() ? 'Deleting…' : 'Yes, delete' }}
-                        </button>
+                        <button class="icon-action" (click)="deleteUser()" [disabled]="deleting()" aria-label="Confirm delete account" title="Confirm delete account"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/></svg></button>
                         <button class="btn btn-ghost" (click)="confirmDeleteUser.set(false)">Cancel</button>
                     </div>
                     @if (deleteError()) {
@@ -127,7 +125,7 @@
 
         } @else if (!farmId()) {
             <div class="empty-state">You don't have a farm yet.</div>
-            <a *appCan="'manageFarm'" class="btn btn-primary" style="margin-top:12px;display:inline-block" routerLink="/farm/create">Add farm</a>
+            <a *appCan="'manageFarm'" class="icon-action" style="margin-top:12px" routerLink="/farm/create" aria-label="Add farm" title="Add farm"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></a>
 
         } @else if (farm(); as f) {
 
@@ -135,7 +133,7 @@
             @if (!editingFarm()) {
                 <div class="farm-header">
                     <div class="full-name">{{ f.name }}</div>
-                    <button *appCan="'manageFarm'" class="btn btn-ghost" (click)="startEditFarm()">Edit</button>
+                    <button *appCan="'manageFarm'" class="icon-action" (click)="startEditFarm()" aria-label="Edit" title="Edit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m16 3 5 5-13 13H3v-5L16 3ZM13 6l5 5"/></svg></button>
                 </div>
 
                 <div class="field-grid" style="margin-top:12px">
@@ -171,13 +169,11 @@
                 <div class="danger-zone" *appCan="'manageFarm'">
 
                     @if (!confirmDeleteFarm()) {
-                        <button class="btn btn-danger-ghost" (click)="confirmDeleteFarm.set(true)">Delete farm</button>
+                        <button class="icon-action" (click)="confirmDeleteFarm.set(true)" aria-label="Delete farm" title="Delete farm"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/></svg></button>
                     } @else {
                         <div class="confirm-row">
                             <span>Are you sure? This cannot be undone.</span>
-                            <button class="btn btn-danger" (click)="deleteFarm()" [disabled]="deleting()">
-                                {{ deleting() ? 'Deleting…' : 'Yes, delete' }}
-                            </button>
+                            <button class="icon-action" (click)="deleteFarm()" [disabled]="deleting()" aria-label="Confirm delete farm" title="Confirm delete farm"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/></svg></button>
                             <button class="btn btn-ghost" (click)="confirmDeleteFarm.set(false)">Cancel</button>
                         </div>
                         @if (deleteError()) {

@@ -75,12 +75,6 @@ import { ProductService } from '../../../core/services/product.service';
 
             <div class="form-group"><label class="form-label">Product expiry date</label><input class="form-control" type="date" formControlName="expiry_date" /></div>
             <div class="form-group"><label class="form-label">Production batch</label><select class="form-control" formControlName="batch_id"><option value="">No linked production</option>@for (batch of batches(); track batch.id) {<option [value]="batch.id">{{ batch.name }} · {{ batch.status }}</option>}</select><small>Links the product to its production dates and material origins.</small></div>
-            @if (isEdit()) {
-              <div class="form-group" style="display:flex;align-items:center;gap:10px">
-                <input type="checkbox" formControlName="is_active" id="is_active" />
-                <label for="is_active" style="font-size:0.9rem;cursor:pointer">On sale (visible to customers)</label>
-              </div>
-            }
 
           </div>
 
@@ -134,7 +128,7 @@ export class ProductFormComponent implements OnInit {
     this.id = this.route.snapshot.paramMap.get('id') ?? '';
     if (this.id) {
       this.isEdit.set(true);
-      this.svc.getById(this.id).subscribe(res => { this.form.patchValue(res.data as any); this.form.controls.quantity.disable(); this.form.controls.unit.disable(); if(res.data.batch_id) this.form.controls.batch_id.disable(); });
+      this.svc.getById(this.id).subscribe(res => { if(res.data.status === 'PRODUCTION'){this.router.navigate(['/production',res.data.batch_id]);return;} this.form.patchValue(res.data as any); this.form.controls.quantity.disable(); this.form.controls.unit.disable(); if(res.data.batch_id) this.form.controls.batch_id.disable(); });
     }
   }
 
@@ -173,7 +167,7 @@ export class ProductFormComponent implements OnInit {
       : this.svc.update(this.id, payload);
 
     obs.subscribe({
-      next:  () => this.router.navigate([raw.is_active ? '/products' : '/storage']),
+      next:  () => this.router.navigate(['/products']),
       error: (e) => { this.error.set(e.error?.error ?? 'Failed to save'); this.loading.set(false); },
     });
   }

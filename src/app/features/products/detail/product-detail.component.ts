@@ -24,16 +24,19 @@ import {Product, ProvenanceMaterial, ProvenanceResponse} from '../../../shared/m
               <span class="badge badge-planned">{{ product()!.product_type }}</span>
               &nbsp;
               <span [class]="product()!.is_active ? 'badge badge-completed' : 'badge badge-cancelled'">
-                {{ product()!.is_active ? 'Active' : 'Inactive' }}
+                {{ product()!.status === 'PRODUCTION' ? 'Production' : product()!.status === 'ON_SALE' ? 'On sale' : 'Storage' }}
               </span>
             </p>
           </div>
           <div class="actions">
-            <a *appCan="'manageProducts'" [routerLink]="['/products', product()!.id, 'edit']" class="btn btn-secondary">✏️ Edit</a>
-            <button *appCan="'deleteFarmData'" class="btn btn-danger" (click)="confirmDelete()">🗑️ Delete</button>
+            @if(product()!.status !== 'PRODUCTION'){<button *appCan="'manageProducts'" class="btn btn-secondary" [disabled]="moving()" (click)="move()">Move to {{product()!.status === 'ON_SALE' ? 'Storage' : 'On sale'}}</button>}
+            @else {<a [routerLink]="['/production',product()!.batch_id]" class="icon-action" aria-label="Edit in production" title="Edit in production"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m16 3 5 5-13 13H3v-5L16 3ZM13 6l5 5"/></svg></a>}
+            <a *appCan="'manageProducts'" [routerLink]="product()!.status === 'PRODUCTION' ? ['/production',product()!.batch_id] : ['/products', product()!.id, 'edit']" class="icon-action" aria-label="Edit" title="Edit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m16 3 5 5-13 13H3v-5L16 3ZM13 6l5 5"/></svg></a>
+            <button *appCan="'deleteFarmData'" class="icon-action" [disabled]="product()!.status === 'PRODUCTION'" (click)="confirmDelete()" aria-label="Delete" title="Delete"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/></svg></button>
           </div>
         </div>
 
+        @if(moveError()){<div class="alert alert-danger">{{moveError()}}</div>}
         <div class="detail-layout">
 
           <!-- Left: image + QR -->
@@ -212,6 +215,9 @@ import {Product, ProvenanceMaterial, ProvenanceResponse} from '../../../shared/m
   `]
 })
 export class ProductDetailComponent implements OnInit {
+  moving=signal(false); moveError=signal('');
+  move(){this.moving.set(true);this.moveError.set('');this.svc.update(this.product()!.id,{status:this.product()!.status === 'ON_SALE' ? 'STORAGE' : 'ON_SALE'}).subscribe({next:r=>{this.product.set(r.data);this.moving.set(false);},error:e=>{this.moveError.set(e.error?.error??'Could not move product');this.moving.set(false);}});}
+
   private svc    = inject(ProductService);
   private route  = inject(ActivatedRoute);
   private router = inject(Router);

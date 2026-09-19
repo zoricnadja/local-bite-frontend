@@ -18,7 +18,7 @@ import {PaginatedResponse} from "../../../shared/models/api.models";
           <h1 class="page-title">Production Batches</h1>
           <p class="page-subtitle">{{ total() }} batches total</p>
         </div>
-        <a routerLink="new" class="btn btn-primary">+ New Batch</a>
+        <a routerLink="new" class="btn btn-primary">New Batch</a>
       </div>
 
       <div class="search-bar">
@@ -66,7 +66,9 @@ import {PaginatedResponse} from "../../../shared/models/api.models";
             </thead>
             <tbody>
               @for (b of items(); track b.id) {
-                <tr>
+                <tr class="clickable-surface" [routerLink]="b.id" #detailLink tabindex="0"
+                    (keydown.enter)="$event.target === $event.currentTarget && detailLink.click()"
+                    [attr.aria-label]="'Open batch ' + b.name">
                   <td><strong>{{ b.name }}</strong></td>
                   <td><span class="badge badge-planned">{{ b.process_type }}</span></td>
                   <td><span [class]="statusClass(b.status)">{{ b.status }}</span></td>
@@ -76,10 +78,9 @@ import {PaginatedResponse} from "../../../shared/models/api.models";
                     {{ b.notes ?? '—' }}
                   </td>
                   <td>
-                    <div class="actions">
-                      <a [routerLink]="b.id" class="quiet-link">View</a>
+                    <div class="actions" (click)="$event.stopPropagation()">
                       <a [routerLink]="[b.id, 'edit']" class="icon-action" aria-label="Edit" title="Edit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m16 3 5 5-13 13H3v-5L16 3ZM13 6l5 5"/></svg></a>
-                      <button *appCan="'deleteFarmData'" class="btn btn-sm btn-ghost" (click)="confirmDelete(b)" title="Delete">🗑️</button>
+                      <button *appCan="'deleteFarmData'" class="icon-action" (click)="confirmDelete(b)" title="Delete" aria-label="Delete"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/></svg></button>
                     </div>
                   </td>
                 </tr>

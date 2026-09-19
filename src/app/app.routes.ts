@@ -37,7 +37,7 @@ export const routes: Routes = [
     loadChildren: () =>
       import('./features/production/production.routes').then(m => m.PRODUCTION_ROUTES),
   },
-  { path: 'storage', canActivate:[authGuard, permissionGuard('viewMaterials')], data:{storage:true}, loadComponent:()=>import('./features/products/list/products-list.component').then(m=>m.ProductsListComponent) },
+  { path: 'storage', redirectTo: 'products', pathMatch: 'full' },
   {
     path: 'products',
     canActivate: [authGuard],

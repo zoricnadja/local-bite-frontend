@@ -56,7 +56,7 @@ interface CartItem {
                       <button class="qty-btn" (click)="changeQty(p.id, 1)">+</button>
                     </div>
                   } @else {
-                    <button class="btn btn-sm btn-secondary" (click)="addToCart(p)">Add</button>
+                    <button class="icon-action" (click)="addToCart(p)" aria-label="Add" title="Add"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
                   }
                 </div>
               }
@@ -87,7 +87,7 @@ interface CartItem {
                     <td class="font-mono">{{ item.quantity }}</td>
                     <td><strong>€{{ (item.product.price * item.quantity).toFixed(2) }}</strong></td>
                     <td>
-                      <button class="btn btn-sm btn-ghost" (click)="removeFromCart(item.product.id)">✕</button>
+                      <button class="icon-action" (click)="removeFromCart(item.product.id)" aria-label="Remove from cart" title="Remove from cart"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/></svg></button>
                     </td>
                   </tr>
                 }

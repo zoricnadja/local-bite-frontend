@@ -1,4 +1,6 @@
+export type ProductStatus = 'PRODUCTION' | 'STORAGE' | 'ON_SALE';
 export interface Product {
+  status: ProductStatus;
   id: string;
   farm_id: string;
   name: string;
@@ -69,6 +71,7 @@ export interface CreateProductRequest {
 }
 
 export interface UpdateProductRequest {
+  status?: ProductStatus;
   name?: string;
   product_type?: string;
   description?: string;
@@ -81,6 +84,7 @@ export interface UpdateProductRequest {
 }
 
 export interface ProductListQuery {
+  status?: ProductStatus;
   is_active?: boolean; farm_id?: string;
   page?: number;
   limit?: number;

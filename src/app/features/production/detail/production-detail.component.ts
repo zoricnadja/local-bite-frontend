@@ -4,16 +4,17 @@ import { CanDirective } from '../../../core/auth/can.directive';
 import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ProductionService } from '../../../core/services/production.service';
 import { RawMaterialsService } from '../../../core/services/raw-materials.service';
-import { ProductionBatch, ProcessStep, BatchRawMaterial, BATCH_STATUS_TRANSITIONS, BatchStatus } from '../../../shared/models/production.models';
+import { ProductionOutput, ProductionBatch, ProcessStep, BatchRawMaterial, BATCH_STATUS_TRANSITIONS, BatchStatus } from '../../../shared/models/production.models';
 import { RawMaterial } from '../../../shared/models/raw-material.models';
+import { CdkTrapFocus } from '@angular/cdk/a11y';
 
 @Component({
   selector: 'app-production-detail',
   standalone: true,
-  imports: [FieldErrorsDirective, CanDirective, CommonModule, RouterLink, ReactiveFormsModule],
+  imports: [CdkTrapFocus, FieldErrorsDirective, CanDirective, CommonModule, RouterLink, FormsModule, ReactiveFormsModule],
   template: `
     <div class="page">
       @if (loading()) {
@@ -29,8 +30,8 @@ import { RawMaterial } from '../../../shared/models/raw-material.models';
             </p>
           </div>
           <div class="actions">
-            <a [routerLink]="['/production', batch()!.id, 'edit']" class="btn btn-secondary">✏️ Edit</a>
-            <button *appCan="'deleteFarmData'" class="btn btn-danger" (click)="confirmDelete()">🗑️ Delete</button>
+            <a [routerLink]="['/production', batch()!.id, 'edit']" class="icon-action" aria-label="Edit" title="Edit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m16 3 5 5-13 13H3v-5L16 3ZM13 6l5 5"/></svg></a>
+            <button *appCan="'deleteFarmData'" class="icon-action" (click)="confirmDelete()" aria-label="Delete" title="Delete"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/></svg></button>
           </div>
         </div>
 
@@ -46,22 +47,41 @@ import { RawMaterial } from '../../../shared/models/raw-material.models';
         }
 
         @if (statusError()) { <div class="alert alert-danger">{{ statusError() }}</div> }
-        @if (showCompletion) {
-          <form class="card" style="margin-bottom:20px" [formGroup]="outputForm" (ngSubmit)="complete()">
-            <h3>Production result</h3><p class="text-muted">Enter the measured output. Completion creates one product in Storage.</p>
-            <div class="form-grid">
-              <div class="form-group"><label class="form-label">Product name *</label><input class="form-control" formControlName="output_name" /></div>
-              <div class="form-group"><label class="form-label">Product type *</label><select class="form-control" formControlName="output_type"><option value="">Select type…</option>@for (type of outputTypes; track type) {<option [value]="type">{{type}}</option>}</select></div>
-              <div class="form-group"><label class="form-label">Quantity obtained *</label><input class="form-control" type="number" min="0.001" step="0.001" formControlName="output_quantity" /></div>
-              <div class="form-group"><label class="form-label">Unit *</label><select class="form-control" formControlName="output_unit">@for(unit of ['kg','g','l','ml','pcs']; track unit){<option [value]="unit">{{unit}}</option>}</select></div>
-              <div class="form-group"><label class="form-label">Production end *</label><input class="form-control" type="date" formControlName="end_date" /></div>
-              <div class="form-group"><label class="form-label">Product expiry</label><input class="form-control" type="date" formControlName="output_expiry_date" /></div>
-            </div>
-            <button type="submit" class="btn btn-primary" [disabled]="savingStatus()">Complete production</button>
-            <button type="button" class="quiet-link" (click)="showCompletion=false">Cancel</button>
-          </form>
+        <div class="card" style="margin-bottom:20px">
+          <div class="actions"><h3>{{batch()!.status === 'COMPLETED' ? 'Final products' : 'Planned products'}}</h3>
+          @if(batch()!.status === 'PLANNED' || batch()!.status === 'IN_PROGRESS') {<button class="icon-action" (click)="openOutputs(false)" aria-label="Plan products" title="Plan products"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>}</div>
+          @for(output of batch()!.outputs; track output.id) {
+            <p>{{output.name}} · {{output.quantity}} {{output.unit}} @if(output.planned){<span class="text-muted">(planned: {{output.planned.quantity}} {{output.planned.unit}})</span>}</p>
+          }
+          <a routerLink="/products" class="quiet-link">View products →</a>
+        </div>
+        @if(showCompletion) {
+          <div class="output-backdrop"><section class="output-dialog card" role="dialog" aria-modal="true" aria-labelledby="output-title" cdkTrapFocus [cdkTrapFocusAutoCapture]="true" (keydown.escape)="!savingStatus() && (showCompletion=false)">
+            <h2 id="output-title">{{completing ? 'Complete production' : 'Plan products'}}</h2>
+            <p class="text-muted">{{completing ? 'Confirm the actual products and quantities. All final products move to Storage.' : 'These products will appear in Production until the batch is completed.'}}</p>
+            @if(statusError()){<div class="alert alert-danger" role="alert">{{statusError()}}</div>}
+            <form #outputsForm="ngForm" (ngSubmit)="saveOutputs(outputsForm.valid === true)">
+            @for(output of draftOutputs; track $index; let i=$index) {
+              <fieldset class="output-row"><legend>Product {{i+1}}</legend>
+              @if(output.planned){<p class="text-muted">Planned: {{output.planned.name}} · {{output.planned.quantity}} {{output.planned.unit}} · €{{output.planned.price}}</p>}
+              <div class="form-grid">
+                <label class="form-group">Name *<input class="form-control" required [name]="'name'+i" [(ngModel)]="output.name" /></label>
+                <label class="form-group">Type *<select class="form-control" required [name]="'type'+i" [(ngModel)]="output.product_type">@for(t of outputTypes;track t){<option [value]="t">{{t}}</option>}</select></label>
+                <label class="form-group">{{completing ? 'Actual quantity' : 'Planned quantity'}} *<input class="form-control" type="number" required min="0.001" step="0.001" [name]="'quantity'+i" [(ngModel)]="output.quantity" /></label>
+                <label class="form-group">Unit *<select class="form-control" required [name]="'unit'+i" [(ngModel)]="output.unit">@for(u of ['kg','g','l','ml','pcs'];track u){<option [value]="u">{{u}}</option>}</select></label>
+                <label class="form-group">Price *<input class="form-control" type="number" required min="0" step="0.01" [name]="'price'+i" [(ngModel)]="output.price" /></label>
+                <label class="form-group">Expiry date<input class="form-control" type="date" [name]="'expiry'+i" [(ngModel)]="output.expiry_date" /></label>
+                <label class="form-group form-full">Description<input class="form-control" [name]="'description'+i" [(ngModel)]="output.description" /></label>
+              </div>
+              <button type="button" class="icon-action" [disabled]="savingStatus()" (click)="draftOutputs.splice(i,1)" aria-label="Remove product" title="Remove product"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/></svg></button>
+              </fieldset>
+            }
+            <button type="button" class="icon-action" [disabled]="savingStatus()" (click)="addOutput()" aria-label="Add product" title="Add product"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+            @if(completing){<label class="form-group">Production end *<input class="form-control" name="endDate" required type="date" [(ngModel)]="outputEndDate" /></label>}
+            <div class="actions"><button type="submit" class="btn btn-primary" [disabled]="savingStatus() || (completing && !draftOutputs.length)">{{savingStatus() ? 'Saving…' : completing ? 'Complete production' : 'Save plan'}}</button><button type="button" class="btn btn-secondary" [disabled]="savingStatus()" (click)="showCompletion=false">Cancel</button></div>
+            </form>
+          </section></div>
         }
-        @if (batch()!.output_quantity) {<div class="card" style="margin-bottom:20px"><h3>Production result</h3><p>{{batch()!.output_name}} · {{batch()!.output_quantity}} {{batch()!.output_unit}}</p><a routerLink="/product" class="quiet-link">View Storage →</a><p class="text-muted text-sm">New stock appears automatically after synchronization.</p></div>}
         <div class="detail-layout">
 
           <!-- Batch info -->
@@ -97,9 +117,7 @@ import { RawMaterial } from '../../../shared/models/raw-material.models';
           <div class="card" style="margin-top:16px">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
               <h3>Process Steps</h3>
-              <button *ngIf="batch()!.status !== 'COMPLETED' && batch()!.status !== 'CANCELLED'" class="btn btn-sm btn-secondary" (click)="showAddStep = !showAddStep">
-                {{ showAddStep ? 'Cancel' : '+ Add Step' }}
-              </button>
+              <button *ngIf="batch()!.status !== 'COMPLETED' && batch()!.status !== 'CANCELLED'" class="icon-action" (click)="showAddStep = !showAddStep" [attr.aria-label]="showAddStep ? 'Cancel' : 'Add step'" [title]="showAddStep ? 'Cancel' : 'Add step'">@if (showAddStep) { <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M6 18 18 6"/></svg> } @else { <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> }</button>
             </div>
 
             @if (showAddStep) {
@@ -126,9 +144,7 @@ import { RawMaterial } from '../../../shared/models/raw-material.models';
                     <input class="form-control" type="number" formControlName="temperature" step="0.1" />
                   </div>
                 </div>
-                <button class="btn btn-primary btn-sm" type="submit" [disabled]="false" style="margin-top:10px">
-                  Add Step
-                </button>
+                <button class="icon-action" type="submit" [disabled]="false" style="margin-top:10px" aria-label="Add Step" title="Add Step"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
               </form>
               @if (stepError()) {
                 <div class="alert alert-danger" style="margin-top:16px">{{ stepError() }}</div>
@@ -163,9 +179,7 @@ import { RawMaterial } from '../../../shared/models/raw-material.models';
           <div class="card" style="margin-top:16px">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
               <h3>Raw Materials</h3>
-              <button *ngIf="batch()!.status !== 'COMPLETED' && batch()!.status !== 'CANCELLED'" class="btn btn-sm btn-secondary" (click)="toggleAddMaterial()">
-                {{ showAddMaterial ? 'Cancel' : '+ Add Material' }}
-              </button>
+              <button *ngIf="batch()!.status !== 'COMPLETED' && batch()!.status !== 'CANCELLED'" class="icon-action" (click)="toggleAddMaterial()" [attr.aria-label]="showAddMaterial ? 'Cancel' : 'Add material'" [title]="showAddMaterial ? 'Cancel' : 'Add material'">@if (showAddMaterial) { <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M6 18 18 6"/></svg> } @else { <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> }</button>
             </div>
 
             @if (showAddMaterial) {
@@ -195,9 +209,7 @@ import { RawMaterial } from '../../../shared/models/raw-material.models';
                     </select>
                   </div>
                 </div>
-                <button class="btn btn-primary btn-sm" type="submit" [disabled]="false" style="margin-top:10px">
-                  Add Material
-                </button>
+                <button class="icon-action" type="submit" [disabled]="false" style="margin-top:10px" aria-label="Add Material" title="Add Material"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
               </form>
               @if (materialError()) {
                 <div class="alert alert-danger" style="margin-top:16px">{{ materialError() }}</div>
@@ -241,6 +253,11 @@ import { RawMaterial } from '../../../shared/models/raw-material.models';
     </div>
   `,
   styles: [`
+    .output-backdrop { position:fixed; inset:0; z-index:200; background:#17251a99; display:grid; place-items:center; padding:20px; }
+    .output-dialog { width:min(760px,100%); max-height:90vh; overflow:auto; }
+    .output-dialog form > .btn { margin:0 0 16px; }
+    .output-dialog .form-grid { margin-bottom:12px; }
+    .output-row { border:1px solid var(--border); border-radius:8px; padding:16px; margin:16px 0; }
     .detail-layout { display: flex; flex-direction: column; }
     .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
     .info-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); margin-bottom: 4px; }
@@ -276,12 +293,20 @@ export class ProductionDetailComponent implements OnInit {
   showCompletion=false;
   savingStatus=signal(false); statusError=signal('');
   outputTypes=['meat','dairy','vegetable','fruit','cheese','sausage','honey','other'];
-  outputForm=this.fb.group({output_name:['',requiredText],output_type:['',Validators.required],output_quantity:[null as number|null,[Validators.required,Validators.min(0.001)]],output_unit:['kg',Validators.required],end_date:[new Date().toISOString().slice(0,10),Validators.required],output_expiry_date:['']});
-  complete() {
-    if(this.outputForm.invalid){this.outputForm.markAllAsTouched();return;}
-    const f=this.outputForm.getRawValue();
-    this.savingStatus.set(true);this.statusError.set('');
-    this.svc.updateBatch(this.id,{status:'COMPLETED',output_name:f.output_name!,output_type:f.output_type!,output_quantity:Number(f.output_quantity),output_unit:f.output_unit!,end_date:f.end_date!,output_expiry_date:f.output_expiry_date||undefined}).subscribe({next:r=>{this.batch.set(r.data);this.showCompletion=false;this.savingStatus.set(false);},error:e=>{this.statusError.set(e.error?.error??'Could not complete production');this.savingStatus.set(false);}});
+  completing=false; draftOutputs: ProductionOutput[]=[]; outputEndDate='';
+  openOutputs(completing:boolean) {
+    this.completing=completing; this.statusError.set('');
+    this.draftOutputs=(this.batch()!.outputs || []).map(o=>({...o,planned:completing ? {...o} : undefined}));
+    if(!this.draftOutputs.length)this.addOutput();
+    this.outputEndDate=this.batch()!.end_date || new Date().toISOString().slice(0,10);
+    this.showCompletion=true;
+  }
+  addOutput(){this.draftOutputs.push({name:'',product_type:'other',quantity:1,unit:'kg',price:0});}
+  saveOutputs(valid:boolean) {
+    if(!valid || this.draftOutputs.some(o=>!o.name.trim())){this.statusError.set('Enter valid product details.');return;}
+    this.savingStatus.set(true); this.statusError.set('');
+    const outputs=this.draftOutputs.map(({planned,...o})=>({...o,expiry_date:o.expiry_date || undefined}));
+    this.svc.updateBatch(this.id,{outputs,...(this.completing ? {status:'COMPLETED' as const,end_date:this.outputEndDate} : {})}).subscribe({next:r=>{this.batch.set(r.data);this.showCompletion=false;this.savingStatus.set(false);},error:e=>{this.statusError.set(e.error?.error??'Could not save products');this.savingStatus.set(false);}});
   }
   private id = '';
 
@@ -324,7 +349,7 @@ export class ProductionDetailComponent implements OnInit {
   }
 
   advanceStatus(status: BatchStatus) {
-    if(status==='COMPLETED'){this.outputForm.patchValue({output_name:this.batch()!.name});this.showCompletion=true;return;}
+    if(status==='COMPLETED'){this.openOutputs(true);return;}
     this.statusError.set('');
     this.svc.updateBatch(this.id,{status}).subscribe({next:res=>this.batch.set(res.data),error:e=>this.statusError.set(e.error?.error??'Could not change status')});
   }

@@ -1,3 +1,4 @@
+export interface ProductionOutput { id?: string; name: string; product_type: string; quantity: number; unit: string; price: number; description?: string; expiry_date?: string; planned?: ProductionOutput; }
 export type BatchStatus = 'PLANNED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
 
 export interface ProcessStep {
@@ -21,6 +22,7 @@ export interface BatchRawMaterial {
 }
 
 export interface ProductionBatch {
+  outputs: ProductionOutput[];
   output_name?: string; output_type?: string; output_quantity?: number; output_unit?: string; output_expiry_date?: string;
   id: string;
   farm_id: string;
@@ -46,6 +48,7 @@ export interface CreateBatchRequest {
 }
 
 export interface UpdateBatchRequest {
+  outputs?: ProductionOutput[];
   output_name?: string; output_type?: string; output_quantity?: number; output_unit?: string; output_expiry_date?: string;
   name?: string;
   process_type?: string;

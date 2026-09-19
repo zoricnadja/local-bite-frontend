@@ -318,7 +318,30 @@ body .btn:disabled, body .btn[aria-disabled="true"] { background:#e2e5e3; color:
 
 /* Quiet secondary actions, including monochrome edit/delete icons. */
 .icon-action,.quiet-link { display:inline-flex;align-items:center;justify-content:center;gap:4px;background:transparent!important;color:var(--text-muted)!important;border:0!important;box-shadow:none!important;text-decoration:none;cursor:pointer;border-radius:6px;font-size:.85rem;padding:6px 8px;min-height:32px; }
-.icon-action { width:32px;font-size:18px; }
-.icon-action:hover,.quiet-link:hover {background:var(--surface-2)!important;color:var(--text-primary)!important;}
+.icon-action { width:32px;height:32px;padding:7px;flex-shrink:0;font-size:18px; }
+.quiet-link:hover {background:var(--surface-2)!important;color:var(--text-primary)!important;}
+.icon-action:hover:not(:disabled) {background:transparent!important;color:var(--text-primary)!important;}
+.icon-action:focus-visible {outline:3px solid #88b991;outline-offset:3px;}
 .icon-action svg {width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;}
 .icon-action:disabled {opacity:.4;cursor:not-allowed;}
+.add { width:40px!important;height:40px!important;color:#2f6d42!important; }
+
+
+/* Shared action spacing and simple, consistent icons. */
+.actions,.form-actions,.product-actions { display:flex; flex-wrap:wrap; align-items:center; gap:12px; }
+.btn + .btn,.btn + .quiet-link { margin-left:8px; }
+.actions > .btn,.form-actions > .btn,.product-actions > .btn { margin-left:0; }
+.btn svg,.icon-action svg { width:18px; height:18px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; flex-shrink:0; }
+
+body .btn-secondary,body .btn-ghost { background:#fff; color:#245536; border-color:#a9bcb0; }
+body .btn-danger { background:#fff; color:#a52828; border-color:#d9a5a5; }
+body .btn-danger:hover:not(:disabled) { background:#fceaea; color:#8d1c1c; border-color:#a52828; }
+.btn,.icon-action { gap:8px; }
+.btn + .icon-action,.icon-action + .btn,.icon-action + .icon-action { margin-left:8px; }
+.actions > *,.product-actions > * { margin-left:0; }
+
+/* Cards and rows that open a detail page. */
+.clickable-surface { cursor: pointer; }
+.clickable-surface:focus-visible { outline: 3px solid var(--accent); outline-offset: -3px; }
+a.clickable-surface { color: inherit; text-decoration: none; }
+a.clickable-surface:hover { border-color: var(--accent); }

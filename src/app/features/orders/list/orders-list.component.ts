@@ -21,7 +21,7 @@ import {AuthService} from "../../../core/auth/auth.service";
         </div>
         <div class="actions">
           <a *appCan="'analytics'" routerLink="/orders/analytics" class="btn btn-secondary">📊 Analytics</a>
-          <a *appCan="'shop'" routerLink="/orders/new" class="btn btn-primary">+ New Order</a>
+          <a *appCan="'shop'" routerLink="/orders/new" class="btn btn-primary">New Order</a>
         </div>
       </div>
 
@@ -45,7 +45,7 @@ import {AuthService} from "../../../core/auth/auth.service";
         <div class="empty-state">
           <div class="empty-state-icon">🛒</div>
           <div class="empty-state-text">No orders found</div>
-          <a *appCan="'shop'" routerLink="/orders/new" class="btn btn-primary" style="margin-top:16px">Create first order</a>
+          <a *appCan="'shop'" routerLink="/orders/new" class="icon-action" style="margin-top:16px" aria-label="Create first order" title="Create first order"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></a>
         </div>
       } @else {
         <div class="table-wrapper">
@@ -63,7 +63,9 @@ import {AuthService} from "../../../core/auth/auth.service";
             </thead>
             <tbody>
               @for (o of items(); track o.id) {
-                <tr>
+                <tr class="clickable-surface" [routerLink]="o.id" #detailLink tabindex="0"
+                    (keydown.enter)="$event.target === $event.currentTarget && detailLink.click()"
+                    [attr.aria-label]="'Open order #' + o.id.slice(0,8)">
                   <td><span class="font-mono text-sm text-muted">#{{ o.id.slice(0,8) }}</span></td>
                   <td>
                     <div style="font-weight:600">{{ authSvc.isCustomer() ? producerName(o.farm_id) : (o.customer_name ?? 'Customer') }}</div>
@@ -76,11 +78,10 @@ import {AuthService} from "../../../core/auth/auth.service";
                   <td><strong>€{{ o.total_price.toFixed(2) }}</strong></td>
                   <td class="text-muted text-sm">{{ o.created_at | date:'mediumDate' }}</td>
                   <td>
-                    <div class="actions">
-                      <a [routerLink]="o.id" class="quiet-link">View</a>
-                      <button *appCan="'deleteFarmData'" class="btn btn-sm btn-ghost" (click)="confirmDelete(o)"
+                    <div class="actions" (click)="$event.stopPropagation()">
+                      <button *appCan="'deleteFarmData'" class="icon-action" (click)="confirmDelete(o)"
                               [disabled]="o.status !== 'PENDING' && o.status !== 'CANCELLED'"
-                              title="Delete">🗑️</button>
+                              title="Delete" aria-label="Delete"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/></svg></button>
                     </div>
                   </td>
                 </tr>

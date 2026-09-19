@@ -13,7 +13,7 @@ import { AuthService } from '../../../core/auth/auth.service';
     <div class="page">
       <div class="header">
         <h1 class="page-title">Workers</h1>
-        <a class="btn primary" [routerLink]="['/farm','workers','add']">Add worker</a>
+        <a class="btn btn-primary" [routerLink]="['/farm','workers','add']">Add worker</a>
       </div>
 
       <ng-container *ngIf="farmId() as fid; else noFarm">

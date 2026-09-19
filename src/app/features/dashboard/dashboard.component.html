@@ -20,7 +20,6 @@
         <div><strong>Order #{{ order.id.slice(0, 8) }}</strong><div class="text-muted">{{ order.created_at | date:'mediumDate' }}</div></div>
         <span class="badge" [class]="'badge badge-' + order.status.toLowerCase()">{{ order.status | titlecase }}</span>
         <strong>{{ order.total_price | currency:'EUR' }}</strong>
-        <span>View →</span>
       </a>
     } @empty {
       <div class="empty-state"><h3>No orders yet</h3><p>Discover food from local farms and place your first order.</p><a routerLink="/products" class="btn btn-primary">Explore products</a></div>
@@ -47,41 +46,37 @@
 } @else {
 <!-- Summary cards -->
     <div class="stats-grid">
-        <div class="stat-card">
+        <a class="stat-card clickable-surface" routerLink="/orders">
         <div class="stat-icon">🛒</div>
         <div class="stat-content">
             <div class="stat-value">{{ stats().totalOrders }}</div>
             <div class="stat-label">Total Orders</div>
         </div>
-        <a routerLink="/orders" class="stat-link">View →</a>
-        </div>
+        </a>
 
-        <div class="stat-card">
+        <a class="stat-card clickable-surface" routerLink="/orders/analytics">
         <div class="stat-icon">💰</div>
         <div class="stat-content">
             <div class="stat-value">{{ stats().revenue | currency:'EUR' }}</div>
             <div class="stat-label">Revenue (Delivered)</div>
         </div>
-        <a routerLink="/orders/analytics" class="stat-link">Analytics →</a>
-        </div>
+        </a>
 
-        <div class="stat-card">
+        <a class="stat-card clickable-surface" routerLink="/production">
         <div class="stat-icon">⚙️</div>
         <div class="stat-content">
             <div class="stat-value">{{ stats().activeBatches }}</div>
             <div class="stat-label">Active Batches</div>
         </div>
-        <a routerLink="/production" class="stat-link">View →</a>
-        </div>
+        </a>
 
-        <div class="stat-card">
+        <a class="stat-card clickable-surface" routerLink="/products">
         <div class="stat-icon">📦</div>
         <div class="stat-content">
             <div class="stat-value">{{ stats().totalProducts }}</div>
             <div class="stat-label">Products Listed</div>
         </div>
-        <a routerLink="/products" class="stat-link">View →</a>
-        </div>
+        </a>
     </div>
 
     } <!-- Low stock alert -->

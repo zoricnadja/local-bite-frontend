@@ -50,11 +50,7 @@ const ALL_STATUSES: BatchStatus[] = ['PLANNED', 'IN_PROGRESS', 'COMPLETED', 'CAN
             @if (isEdit()) {
               <div class="form-group">
                 <label class="form-label">Status</label>
-                <select class="form-control" formControlName="status">
-                  @for (s of statuses; track s) {
-                    <option [value]="s">{{ s }}</option>
-                  }
-                </select>
+                <input class="form-control" formControlName="status" readonly /><small class="text-muted">Change status from the production details page.</small>
               </div>
             }
 
@@ -83,10 +79,10 @@ const ALL_STATUSES: BatchStatus[] = ['PLANNED', 'IN_PROGRESS', 'COMPLETED', 'CAN
                   <div class="form-group"><label class="form-label">Material *</label><select class="form-control" formControlName="raw_material_id" (change)="selectMaterial(i)"><option value="">Select material</option>@for (m of materials(); track m.id) { <option [value]="m.id">{{ m.name }} ({{ m.quantity }} {{ m.unit }} available)</option> }</select></div>
                   <div class="form-group"><label class="form-label">Quantity used *</label><input class="form-control" type="number" min="0.001" step="0.001" formControlName="quantity_used" /></div>
                   <div class="form-group"><label class="form-label">Unit</label><input class="form-control" formControlName="unit" readonly /></div>
-                  <button type="button" class="icon-action" aria-label="Remove material" title="Remove material" (click)="form.controls.raw_materials.removeAt(i)">×</button>
+                  <button type="button" class="icon-action" aria-label="Remove material" title="Remove material" (click)="form.controls.raw_materials.removeAt(i)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/></svg></button>
                 </div>
               }
-              <button type="button" class="btn btn-secondary" style="margin-top:12px" (click)="addMaterial()" [disabled]="materials().length === 0">Add material</button>
+              <button type="button" class="icon-action" style="margin-top:12px" (click)="addMaterial()" [disabled]="materials().length === 0" aria-label="Add material" title="Add material"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
             </section>
           }
           @if (error()) {

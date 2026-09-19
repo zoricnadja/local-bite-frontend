@@ -26,7 +26,7 @@ import {AuthService} from "../../../core/auth/auth.service";
           </div>
           <div class="actions" *appCan="'deleteFarmData'">
             @if (canDelete()) {
-              <button class="btn btn-danger" (click)="confirmDelete()">🗑️ Delete</button>
+              <button class="icon-action" (click)="confirmDelete()" aria-label="Delete" title="Delete"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/></svg></button>
             }
           </div>
         </div>

@@ -15,7 +15,7 @@ describe('Role navigation', () => {
     const fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();
     const nav = fixture.nativeElement.querySelector('nav').textContent;
-    expect(nav).toContain('On Sale');
+    expect(nav).toContain('Products');
     expect(nav).toContain('Orders');
     expect(nav).not.toContain('Employees');
     expect(nav).not.toContain('Production');

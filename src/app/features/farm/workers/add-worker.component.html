@@ -54,15 +54,15 @@
             @if (error()) {
                 <div class="alert alert-danger" style="margin-top:14px">{{ error() }}</div>
             }
-
+            <div style="display:flex;gap:10px;margin-top:20px">
             <button
                     class="btn btn-primary"
-                    style="width:100%;margin-top:20px;justify-content:center"
                     type="submit"
                     [disabled]="loading()">
                 @if (loading()) { <span class="spinner"></span> }
                 Add worker
             </button>
+            </div>
         </form>
         <div class="alert success" *ngIf="worker() as w">
             <strong>Worker created!</strong>
