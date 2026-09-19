@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
+import { ProductWire, productFromWire } from './decimal-wire';
 import { PaginatedResponse, ApiResponse } from '../../shared/models/api.models';
-import { ProductListQuery, Product, ProvenanceResponse, CreateProductRequest, UpdateProductRequest } from '../../shared/models/product.models';
+import { ProductListQuery, Product, ProvenanceResponse, PublicProvenanceResponse, CreateProductRequest, UpdateProductRequest } from '../../shared/models/product.models';
 
 @Injectable({ providedIn: 'root' })
 export class ProductService {
@@ -10,26 +11,26 @@ export class ProductService {
 
   constructor(private http: HttpClient) {}
 
-  list(query: ProductListQuery = {}): Observable<PaginatedResponse<Product>> {
+  list(query: ProductListQuery = {}): Observable<ApiResponse<PaginatedResponse<Product>>> {
     const params = this.buildParams(query as Record<string, unknown>);
-    return this.http.get<PaginatedResponse<Product>>(this.BASE, { params });
+    return this.http.get<ApiResponse<PaginatedResponse<ProductWire>>>(this.BASE, { params }).pipe(map(r => ({ ...r, data: { ...r.data, data: r.data.data.map(productFromWire) } })));
   }
 
-  listByFarm(query: ProductListQuery = {}): Observable<PaginatedResponse<Product>> {
+  listByFarm(query: ProductListQuery = {}): Observable<ApiResponse<PaginatedResponse<Product>>> {
     const params = this.buildParams(query as Record<string, unknown>);
-    return this.http.get<PaginatedResponse<Product>>(`${this.BASE}/farm`, { params });
+    return this.http.get<ApiResponse<PaginatedResponse<ProductWire>>>(`${this.BASE}/farm`, { params }).pipe(map(r => ({ ...r, data: { ...r.data, data: r.data.data.map(productFromWire) } })));
   }
 
   getById(id: string): Observable<ApiResponse<Product>> {
-    return this.http.get<ApiResponse<Product>>(`${this.BASE}/${id}`);
+    return this.http.get<ApiResponse<ProductWire>>(`${this.BASE}/${id}`).pipe(map(r => ({ ...r, data: productFromWire(r.data) })));
   }
 
   getProvenance(id: string): Observable<ApiResponse<ProvenanceResponse>> {
     return this.http.get<ApiResponse<ProvenanceResponse>>(`${this.BASE}/${id}/provenance`);
   }
 
-  getPublicProvenance(qrToken: string): Observable<ApiResponse<ProvenanceResponse>> {
-    return this.http.get<ApiResponse<ProvenanceResponse>>(`${this.BASE}/public/${qrToken}`);
+  getPublicProvenance(qrToken: string): Observable<ApiResponse<PublicProvenanceResponse>> {
+    return this.http.get<ApiResponse<PublicProvenanceResponse>>(`${this.BASE}/public/${qrToken}`);
   }
 
   publicCertificateUrl(qrToken: string): string {
@@ -37,11 +38,11 @@ export class ProductService {
   }
 
   create(req: CreateProductRequest): Observable<ApiResponse<Product>> {
-    return this.http.post<ApiResponse<Product>>(this.BASE, req);
+    return this.http.post<ApiResponse<ProductWire>>(this.BASE, req).pipe(map(r => ({ ...r, data: productFromWire(r.data) })));
   }
 
   update(id: string, req: UpdateProductRequest): Observable<ApiResponse<Product>> {
-    return this.http.put<ApiResponse<Product>>(`${this.BASE}/${id}`, req);
+    return this.http.put<ApiResponse<ProductWire>>(`${this.BASE}/${id}`, req).pipe(map(r => ({ ...r, data: productFromWire(r.data) })));
   }
 
   delete(id: string): Observable<void> {
@@ -51,7 +52,7 @@ export class ProductService {
   uploadImage(id: string, file: File): Observable<ApiResponse<Product>> {
     const form = new FormData();
     form.append('image', file);
-    return this.http.post<ApiResponse<Product>>(`${this.BASE}/${id}/image`, form);
+    return this.http.post<ApiResponse<ProductWire>>(`${this.BASE}/${id}/image`, form).pipe(map(r => ({ ...r, data: productFromWire(r.data) })));
   }
 
   imageUrl(id: string): string {
@@ -63,7 +64,7 @@ export class ProductService {
   }
 
   regenerateQr(id: string): Observable<ApiResponse<Product>> {
-    return this.http.post<ApiResponse<Product>>(`${this.BASE}/${id}/qr/regenerate`, {});
+    return this.http.post<ApiResponse<ProductWire>>(`${this.BASE}/${id}/qr/regenerate`, {}).pipe(map(r => ({ ...r, data: productFromWire(r.data) })));
   }
 
   private buildParams(query: Record<string, unknown>): HttpParams {

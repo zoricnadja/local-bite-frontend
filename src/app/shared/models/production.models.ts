@@ -21,6 +21,7 @@ export interface BatchRawMaterial {
 }
 
 export interface ProductionBatch {
+  output_name?: string; output_type?: string; output_quantity?: number; output_unit?: string; output_expiry_date?: string;
   id: string;
   farm_id: string;
   name: string;
@@ -45,6 +46,7 @@ export interface CreateBatchRequest {
 }
 
 export interface UpdateBatchRequest {
+  output_name?: string; output_type?: string; output_quantity?: number; output_unit?: string; output_expiry_date?: string;
   name?: string;
   process_type?: string;
   start_date?: string;

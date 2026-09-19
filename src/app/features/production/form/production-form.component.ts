@@ -1,3 +1,8 @@
+import { dateOrder } from '../../../shared/form-validators';
+import { RawMaterialsService } from '../../../core/services/raw-materials.service';
+import { RawMaterial } from '../../../shared/models/raw-material.models';
+import { requiredText } from '../../../shared/form-validators';
+import { FieldErrorsDirective } from '../../../shared/field-errors.directive';
 import { Component, OnInit, signal, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -9,7 +14,7 @@ const ALL_STATUSES: BatchStatus[] = ['PLANNED', 'IN_PROGRESS', 'COMPLETED', 'CAN
 @Component({
   selector: 'app-production-form',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [FieldErrorsDirective, ReactiveFormsModule, RouterLink],
   template: `
     <div class="page">
       <div class="page-header">
@@ -70,12 +75,26 @@ const ALL_STATUSES: BatchStatus[] = ['PLANNED', 'IN_PROGRESS', 'COMPLETED', 'CAN
 
           </div>
 
+          @if (!isEdit()) {
+            <section style="margin-top:20px" formArrayName="raw_materials">
+              <h3>Raw materials</h3><p class="text-muted">Selected quantities are deducted from stock when the batch is created.</p>
+              @for (row of form.controls.raw_materials.controls; track row; let i = $index) {
+                <div class="form-grid" [formGroupName]="i" style="margin-top:12px">
+                  <div class="form-group"><label class="form-label">Material *</label><select class="form-control" formControlName="raw_material_id" (change)="selectMaterial(i)"><option value="">Select material</option>@for (m of materials(); track m.id) { <option [value]="m.id">{{ m.name }} ({{ m.quantity }} {{ m.unit }} available)</option> }</select></div>
+                  <div class="form-group"><label class="form-label">Quantity used *</label><input class="form-control" type="number" min="0.001" step="0.001" formControlName="quantity_used" /></div>
+                  <div class="form-group"><label class="form-label">Unit</label><input class="form-control" formControlName="unit" readonly /></div>
+                  <button type="button" class="icon-action" aria-label="Remove material" title="Remove material" (click)="form.controls.raw_materials.removeAt(i)">×</button>
+                </div>
+              }
+              <button type="button" class="btn btn-secondary" style="margin-top:12px" (click)="addMaterial()" [disabled]="materials().length === 0">Add material</button>
+            </section>
+          }
           @if (error()) {
             <div class="alert alert-danger" style="margin-top:16px">{{ error() }}</div>
           }
 
           <div style="display:flex;gap:10px;margin-top:20px">
-            <button class="btn btn-primary" type="submit" [disabled]="loading() || form.invalid">
+            <button class="btn btn-primary" type="submit" [disabled]="loading()">
               @if (loading()) { <span class="spinner"></span> }
               {{ isEdit() ? 'Save changes' : 'Create batch' }}
             </button>
@@ -87,6 +106,8 @@ const ALL_STATUSES: BatchStatus[] = ['PLANNED', 'IN_PROGRESS', 'COMPLETED', 'CAN
   `
 })
 export class ProductionFormComponent implements OnInit {
+  private materialsSvc = inject(RawMaterialsService);
+  materials = signal<RawMaterial[]>([]);
   private svc    = inject(ProductionService);
   private fb     = inject(FormBuilder);
   private route  = inject(ActivatedRoute);
@@ -99,34 +120,44 @@ export class ProductionFormComponent implements OnInit {
   private id = '';
 
   form = this.fb.group({
-    name:         ['', Validators.required],
+    name:         ['', requiredText],
     process_type: ['', Validators.required],
     status:       ['PLANNED'],
     start_date:   [''],
     end_date:     [''],
     notes:        [''],
-  });
+    raw_materials: this.fb.array<ReturnType<ProductionFormComponent['newMaterial']>>([]),
+  }, { validators: dateOrder('start_date', 'end_date') });
+
+  newMaterial() { return this.fb.group({ raw_material_id: ['', Validators.required], quantity_used: [null as number | null, [Validators.required, Validators.min(0.001)]], unit: ['', Validators.required] }); }
+  addMaterial() { this.form.controls.raw_materials.push(this.newMaterial()); }
+  selectMaterial(index: number) {
+    const row = this.form.controls.raw_materials.at(index);
+    const material = this.materials().find(m => m.id === row.controls.raw_material_id.value);
+    if (material) { row.controls.unit.setValue(material.unit); row.controls.quantity_used.setValidators([Validators.required, Validators.min(0.001), Validators.max(Number(material.quantity))]); row.controls.quantity_used.updateValueAndValidity(); }
+  }
 
   ngOnInit() {
     this.id = this.route.snapshot.paramMap.get('id') ?? '';
+    if (!this.id) this.materialsSvc.list({ limit: 100 }).subscribe({ next: res => this.materials.set(res.data.data), error: () => this.error.set('Could not load materials. Try again before adding materials.') });
     if (this.id) {
       this.isEdit.set(true);
       this.svc.getBatch(this.id).subscribe(res => {
         const b = res.data;
         this.form.patchValue({
-          name:         (b as unknown as ProductionBatch).name,
-          process_type: (b as unknown as ProductionBatch).process_type,
-          status:       (b as unknown as ProductionBatch).status,
-          start_date:   (b as unknown as ProductionBatch).start_date ?? '',
-          end_date:     (b as unknown as ProductionBatch).end_date ?? '',
-          notes:        (b as unknown as ProductionBatch).notes ?? '',
+          name:         (b).name,
+          process_type: (b).process_type,
+          status:       (b).status,
+          start_date:   (b).start_date ?? '',
+          end_date:     (b).end_date ?? '',
+          notes:        (b).notes ?? '',
         });
       });
     }
   }
 
   submit() {
-    if (this.form.invalid) return;
+    if (this.form.invalid) { this.form.markAllAsTouched(); return; }
     this.loading.set(true);
     this.error.set('');
 
@@ -138,6 +169,7 @@ export class ProductionFormComponent implements OnInit {
       start_date:   raw.start_date || undefined,
       end_date:     raw.end_date   || undefined,
       notes:        raw.notes      || undefined,
+      raw_materials: raw.raw_materials.map(m => ({ raw_material_id: m.raw_material_id!, quantity_used: m.quantity_used!, unit: m.unit! })),
     };
 
     const obs = this.isEdit()
@@ -146,7 +178,7 @@ export class ProductionFormComponent implements OnInit {
 
     obs.subscribe({
       next:  (res) => {
-        this.router.navigate(['/production', (res.data as unknown as ProductionBatch).id])
+        this.router.navigate(['/production', (res.data).id])
       },
       error: (e)   => { this.error.set(e.error?.error ?? 'Failed to save'); this.loading.set(false); },
     });

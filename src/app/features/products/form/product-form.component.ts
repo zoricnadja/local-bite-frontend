@@ -1,12 +1,17 @@
+import { requiredText } from '../../../shared/form-validators';
+import { FieldErrorsDirective } from '../../../shared/field-errors.directive';
 import { Component, OnInit, signal, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { ProductionService } from '../../../core/services/production.service';
+import { ProductionBatch } from '../../../shared/models/production.models';
+import { PaginatedResponse } from '../../../shared/models/api.models';
 import { ProductService } from '../../../core/services/product.service';
 
 @Component({
   selector: 'app-product-form',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [FieldErrorsDirective, ReactiveFormsModule, RouterLink],
   template: `
     <div class="page">
       <div class="page-header">
@@ -68,10 +73,12 @@ import { ProductService } from '../../../core/services/product.service';
               <textarea class="form-control" formControlName="description" placeholder="Describe your product…"></textarea>
             </div>
 
+            <div class="form-group"><label class="form-label">Product expiry date</label><input class="form-control" type="date" formControlName="expiry_date" /></div>
+            <div class="form-group"><label class="form-label">Production batch</label><select class="form-control" formControlName="batch_id"><option value="">No linked production</option>@for (batch of batches(); track batch.id) {<option [value]="batch.id">{{ batch.name }} · {{ batch.status }}</option>}</select><small>Links the product to its production dates and material origins.</small></div>
             @if (isEdit()) {
               <div class="form-group" style="display:flex;align-items:center;gap:10px">
                 <input type="checkbox" formControlName="is_active" id="is_active" />
-                <label for="is_active" style="font-size:0.9rem;cursor:pointer">Active (visible to customers)</label>
+                <label for="is_active" style="font-size:0.9rem;cursor:pointer">On sale (visible to customers)</label>
               </div>
             }
 
@@ -82,7 +89,7 @@ import { ProductService } from '../../../core/services/product.service';
           }
 
           <div style="display:flex;gap:10px;margin-top:20px">
-            <button class="btn btn-primary" type="submit" [disabled]="loading() || form.invalid">
+            <button class="btn btn-primary" type="submit" [disabled]="loading()">
               @if (loading()) { <span class="spinner"></span> }
               {{ isEdit() ? 'Save changes' : 'Create product' }}
             </button>
@@ -94,6 +101,8 @@ import { ProductService } from '../../../core/services/product.service';
   `
 })
 export class ProductFormComponent implements OnInit {
+  private production = inject(ProductionService);
+  batches = signal<ProductionBatch[]>([]);
   private svc    = inject(ProductService);
   private fb     = inject(FormBuilder);
   private route  = inject(ActivatedRoute);
@@ -105,25 +114,44 @@ export class ProductFormComponent implements OnInit {
   private id = '';
 
   form = this.fb.group({
-    name:         ['', Validators.required],
+    name:         ['', requiredText],
     product_type: ['', Validators.required],
     price:        [0,  [Validators.required, Validators.min(0)]],
     quantity:     [0,  [Validators.required, Validators.min(0)]],
     unit:         ['kg', Validators.required],
+    expiry_date:  [''],
+    batch_id:     [''],
     description:  [''],
-    is_active:    [true],
-  });
+    is_active:    [false],
+  }, { validators: group => {
+    const end = this.batches().find(batch => batch.id === group.get('batch_id')?.value)?.end_date;
+    const expiry = group.get('expiry_date')?.value;
+    return end && expiry && expiry < end ? { dateOrder: 'expiry_date' } : null;
+  } });
 
   ngOnInit() {
+    this.loadBatches(1);
     this.id = this.route.snapshot.paramMap.get('id') ?? '';
     if (this.id) {
       this.isEdit.set(true);
-      this.svc.getById(this.id).subscribe(res => this.form.patchValue(res.data as any));
+      this.svc.getById(this.id).subscribe(res => { this.form.patchValue(res.data as any); this.form.controls.quantity.disable(); this.form.controls.unit.disable(); if(res.data.batch_id) this.form.controls.batch_id.disable(); });
     }
   }
 
+  private loadBatches(page: number) {
+    this.production.listBatches({ page, limit: 100 }).subscribe({
+      next: response => {
+        const result = response.data;
+        this.batches.update(items => [...items, ...result.data]);
+        this.form.updateValueAndValidity();
+        if (page * result.limit < result.total) this.loadBatches(page + 1);
+      },
+      error: () => this.error.set('Could not load production batches. Reload to select a batch.'),
+    });
+  }
+
   submit() {
-    if (this.form.invalid) return;
+    if (this.form.invalid) { this.form.markAllAsTouched(); return; }
     this.loading.set(true);
     this.error.set('');
 
@@ -132,18 +160,20 @@ export class ProductFormComponent implements OnInit {
       name:         raw.name!,
       product_type: raw.product_type!,
       price:        Number(raw.price),
-      quantity:     Number(raw.quantity),
-      unit:         raw.unit!,
+      quantity:     undefined,
+      unit:         undefined,
+      expiry_date:  raw.expiry_date || undefined,
+      batch_id:     raw.batch_id || undefined,
       description:  raw.description || undefined,
       is_active:    raw.is_active ?? true,
     };
 
     const obs = this.isEdit()
       ? this.svc.update(this.id, payload)
-      : this.svc.create(payload);
+      : this.svc.update(this.id, payload);
 
     obs.subscribe({
-      next:  () => this.router.navigate(['/products']),
+      next:  () => this.router.navigate([raw.is_active ? '/products' : '/storage']),
       error: (e) => { this.error.set(e.error?.error ?? 'Failed to save'); this.loading.set(false); },
     });
   }

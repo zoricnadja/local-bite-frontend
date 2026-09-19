@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map, tap } from 'rxjs';
+import { AuthService } from '../auth/auth.service';
 import { ApiResponse } from '../../shared/models/api.models';
 import {
   AddWorkerRequest,
@@ -14,10 +15,13 @@ import {
 @Injectable({ providedIn: 'root' })
 export class FarmService {
   private readonly BASE = '/api/auth/farms';
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private auth: AuthService) {}
 
   createFarm(req: CreateFarmRequest): Observable<Farm> {
-    return this.http.post<Farm>(this.BASE, req);
+    return this.http.post<ApiResponse<CreateFarmResult>>(this.BASE, req).pipe(
+      tap(response => this.auth.setToken(response.data.token)),
+      map(response => response.data.farm)
+    );
   }
 
   update(id: string, req: UpdateFarmRequest): Observable<ApiResponse<Farm>> {
@@ -36,8 +40,7 @@ export class FarmService {
     return this.http.get<ApiResponse<Farm>>(`${this.BASE}/${id}`);
   }
 
-  listWorkers(farmId: string): Observable<ApiResponse<WorkerOut>> {
-    // Backend returns workers array wrapped in standard ApiResponse; component will unwrap flexibly
-    return this.http.get<ApiResponse<WorkerOut>>(`${this.BASE}/${farmId}/workers`);
+  listWorkers(farmId: string): Observable<ApiResponse<WorkerOut[]>> {
+    return this.http.get<ApiResponse<WorkerOut[]>>(`${this.BASE}/${farmId}/workers`);
   }
 }

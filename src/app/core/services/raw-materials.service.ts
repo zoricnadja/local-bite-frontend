@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
+import { MaterialWire, materialFromWire } from './decimal-wire';
 import {ApiResponse, PaginatedResponse} from '../../shared/models/api.models';
 import { RawMaterialListQuery, RawMaterial, RawMaterialRequest, AdjustQuantityRequest } from '../../shared/models/raw-material.models';
 
@@ -12,27 +13,27 @@ export class RawMaterialsService {
 
   list(query: RawMaterialListQuery = {}): Observable<ApiResponse<PaginatedResponse<RawMaterial>>> {
     const params = this.buildParams(query as Record<string, unknown>);
-    return this.http.get<ApiResponse<PaginatedResponse<RawMaterial>>>(this.BASE, { params });
+    return this.http.get<ApiResponse<PaginatedResponse<MaterialWire>>>(this.BASE, { params }).pipe(map(r => ({ ...r, data: { ...r.data, data: r.data.data.map(materialFromWire) } })));
   }
 
-  lowStock(): Observable<RawMaterial[]> {
-    return this.http.get<RawMaterial[]>(`${this.BASE}/low-stock`);
+  lowStock(): Observable<ApiResponse<RawMaterial[]>> {
+    return this.http.get<ApiResponse<MaterialWire[]>>(`${this.BASE}/low-stock`).pipe(map(r => ({ ...r, data: r.data.map(materialFromWire) })));
   }
 
   getById(id: string): Observable<ApiResponse<RawMaterial>> {
-    return this.http.get<ApiResponse<RawMaterial>>(`${this.BASE}/${id}`);
+    return this.http.get<ApiResponse<MaterialWire>>(`${this.BASE}/${id}`).pipe(map(r => ({ ...r, data: materialFromWire(r.data) })));
   }
 
   create(req: RawMaterialRequest): Observable<ApiResponse<RawMaterial>> {
-    return this.http.post<ApiResponse<RawMaterial>>(this.BASE, req);
+    return this.http.post<ApiResponse<MaterialWire>>(this.BASE, req).pipe(map(r => ({ ...r, data: materialFromWire(r.data) })));
   }
 
   update(id: string, req: RawMaterialRequest): Observable<ApiResponse<RawMaterial>> {
-    return this.http.put<ApiResponse<RawMaterial>>(`${this.BASE}/${id}`, req);
+    return this.http.put<ApiResponse<MaterialWire>>(`${this.BASE}/${id}`, req).pipe(map(r => ({ ...r, data: materialFromWire(r.data) })));
   }
 
   adjust(id: string, req: AdjustQuantityRequest): Observable<ApiResponse<RawMaterial>> {
-    return this.http.post<ApiResponse<RawMaterial>>(`${this.BASE}/${id}/adjust`, req);
+    return this.http.post<ApiResponse<MaterialWire>>(`${this.BASE}/${id}/adjust`, req).pipe(map(r => ({ ...r, data: materialFromWire(r.data) })));
   }
 
   delete(id: string): Observable<void> {

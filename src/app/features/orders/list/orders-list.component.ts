@@ -1,3 +1,5 @@
+import { ProducerService, Producer } from '../../../core/services/producer.service';
+import { CanDirective } from '../../../core/auth/can.directive';
 import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
@@ -9,7 +11,7 @@ import {AuthService} from "../../../core/auth/auth.service";
 @Component({
   selector: 'app-orders-list',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule],
+  imports: [CanDirective, CommonModule, RouterLink, FormsModule],
   template: `
     <div class="page">
       <div class="page-header">
@@ -18,8 +20,8 @@ import {AuthService} from "../../../core/auth/auth.service";
           <p class="page-subtitle">{{ total() }} orders total</p>
         </div>
         <div class="actions">
-          <a routerLink="/orders/analytics" class="btn btn-secondary">📊 Analytics</a>
-          <a routerLink="/orders/new" class="btn btn-primary">+ New Order</a>
+          <a *appCan="'analytics'" routerLink="/orders/analytics" class="btn btn-secondary">📊 Analytics</a>
+          <a *appCan="'shop'" routerLink="/orders/new" class="btn btn-primary">+ New Order</a>
         </div>
       </div>
 
@@ -34,6 +36,7 @@ import {AuthService} from "../../../core/auth/auth.service";
           <option value="DELIVERED">Delivered</option>
           <option value="CANCELLED">Cancelled</option>
         </select>
+        @if(authSvc.isCustomer()){<select class="form-control" aria-label="Producer" style="width:auto" [(ngModel)]="producerFilter" (ngModelChange)="setPage(1)"><option value="">All producers</option>@for(p of producers(); track p.id){<option [value]="p.id">{{p.name}}</option>}</select>}
       </div>
 
       @if (loading()) {
@@ -42,7 +45,7 @@ import {AuthService} from "../../../core/auth/auth.service";
         <div class="empty-state">
           <div class="empty-state-icon">🛒</div>
           <div class="empty-state-text">No orders found</div>
-          <a routerLink="/orders/new" class="btn btn-primary" style="margin-top:16px">Create first order</a>
+          <a *appCan="'shop'" routerLink="/orders/new" class="btn btn-primary" style="margin-top:16px">Create first order</a>
         </div>
       } @else {
         <div class="table-wrapper">
@@ -50,7 +53,7 @@ import {AuthService} from "../../../core/auth/auth.service";
             <thead>
               <tr>
                 <th>Order ID</th>
-                <th>Customer</th>
+                <th>{{authSvc.isCustomer() ? 'Producer' : 'Customer'}}</th>
                 <th>Status</th>
                 <th>Items</th>
                 <th>Total</th>
@@ -63,8 +66,8 @@ import {AuthService} from "../../../core/auth/auth.service";
                 <tr>
                   <td><span class="font-mono text-sm text-muted">#{{ o.id.slice(0,8) }}</span></td>
                   <td>
-                    <div style="font-weight:600">{{ o.customer_name ?? 'Walk-in' }}</div>
-                    @if (o.customer_email) {
+                    <div style="font-weight:600">{{ authSvc.isCustomer() ? producerName(o.farm_id) : (o.customer_name ?? 'Customer') }}</div>
+                    @if (!authSvc.isCustomer() && o.customer_email) {
                       <div class="text-muted text-sm">{{ o.customer_email }}</div>
                     }
                   </td>
@@ -74,8 +77,8 @@ import {AuthService} from "../../../core/auth/auth.service";
                   <td class="text-muted text-sm">{{ o.created_at | date:'mediumDate' }}</td>
                   <td>
                     <div class="actions">
-                      <a [routerLink]="o.id" class="btn btn-sm btn-secondary">View</a>
-                      <button class="btn btn-sm btn-ghost" (click)="confirmDelete(o)"
+                      <a [routerLink]="o.id" class="quiet-link">View</a>
+                      <button *appCan="'deleteFarmData'" class="btn btn-sm btn-ghost" (click)="confirmDelete(o)"
                               [disabled]="o.status !== 'PENDING' && o.status !== 'CANCELLED'"
                               title="Delete">🗑️</button>
                     </div>
@@ -103,8 +106,10 @@ import {AuthService} from "../../../core/auth/auth.service";
 })
 export class OrdersListComponent implements OnInit {
   private svc = inject(OrdersService);
-  private authSvc = inject(AuthService);
+  readonly authSvc = inject(AuthService);
 
+  private producerSvc=inject(ProducerService);producers=signal<Producer[]>([]);producerFilter='';
+  producerName(id:string){return this.producers().find(p=>p.id===id)?.name??'Producer';}
   items    = signal<Order[]>([]);
   loading  = signal(true);
   total    = signal(0);
@@ -117,12 +122,13 @@ export class OrdersListComponent implements OnInit {
   private searchTimer: any;
   totalPages = () => Math.ceil(this.total() / this.pageSize);
 
-  ngOnInit() { this.load(); }
+  ngOnInit() {this.producerSvc.list().subscribe(r=>this.producers.set(r.data)); this.load(); }
 
   load() {
     this.loading.set(true);
     if (this.authSvc.isCustomer()) {
       this.svc.getAllByUser(this.authSvc.id()!, {
+        farm_id: this.producerFilter||undefined,
         page:   this.page(),
         limit:  this.pageSize,
         search: this.search       || undefined,

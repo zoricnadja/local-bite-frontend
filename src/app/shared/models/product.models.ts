@@ -7,6 +7,7 @@ export interface Product {
   quantity: number;
   unit: string;
   price: number;
+  expiry_date: string | null;
   batch_id: string | null;
   image_path: string | null;
   qr_token: string;
@@ -34,6 +35,9 @@ export interface ProvenanceMaterial {
   unit: string;
   origin: string | null;
   supplier: string | null;
+  harvest_date: string | null;
+  received_date: string | null;
+  expiry_date: string | null;
 }
 
 export interface ProvenanceBatch {
@@ -60,6 +64,7 @@ export interface CreateProductRequest {
   quantity: number;
   unit: string;
   price: number;
+  expiry_date?: string;
   batch_id?: string;
 }
 
@@ -70,14 +75,25 @@ export interface UpdateProductRequest {
   quantity?: number;
   unit?: string;
   price?: number;
+  expiry_date?: string;
   batch_id?: string;
   is_active?: boolean;
 }
 
 export interface ProductListQuery {
+  is_active?: boolean; farm_id?: string;
   page?: number;
   limit?: number;
   product_type?: string;
   search?: string;
   active_only?: boolean;
+}
+
+export interface PublicProvenanceResponse {
+  product: Pick<Product, 'name' | 'product_type' | 'description' | 'expiry_date' | 'qr_token'>;
+  farm_name: string | null;
+  batch: (Pick<ProvenanceBatch, 'name' | 'process_type' | 'start_date' | 'end_date' | 'status'> & {
+    steps: Omit<ProvenanceStep, 'id'>[];
+    raw_materials: Pick<ProvenanceMaterial, 'name' | 'material_type' | 'origin' | 'harvest_date'>[];
+  }) | null;
 }

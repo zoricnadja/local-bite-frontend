@@ -1,3 +1,7 @@
+import { AuthService } from '../../../core/auth/auth.service';
+import { ProducerService, Producer } from '../../../core/services/producer.service';
+import { FormsModule } from '@angular/forms';
+import { FieldErrorsDirective } from '../../../shared/field-errors.directive';
 import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -16,7 +20,7 @@ interface CartItem {
 @Component({
   selector: 'app-order-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [FormsModule, FieldErrorsDirective, CommonModule, ReactiveFormsModule, RouterLink],
   template: `
     <div class="page">
       <div class="page-header">
@@ -26,30 +30,10 @@ interface CartItem {
 
       <div class="order-layout">
 
-        <!-- Customer info -->
-        <div class="card">
-          <h3 style="margin-bottom:16px">Customer Info</h3>
-          <form [formGroup]="customerForm">
-            <div class="form-grid">
-              <div class="form-group">
-                <label class="form-label">Customer Name</label>
-                <input class="form-control" formControlName="customer_name" placeholder="e.g. Marko Marković" />
-              </div>
-              <div class="form-group">
-                <label class="form-label">Customer Email</label>
-                <input class="form-control" type="email" formControlName="customer_email" placeholder="marko@example.com" />
-              </div>
-              <div class="form-group form-full">
-                <label class="form-label">Notes</label>
-                <textarea class="form-control" formControlName="notes" placeholder="Delivery instructions, special requests…"></textarea>
-              </div>
-            </div>
-          </form>
-        </div>
-
+        <p class="text-muted">Ordering as {{auth.currentUser()?.first_name}} {{auth.currentUser()?.last_name}} · {{auth.currentUser()?.email}}</p>
         <!-- Product picker -->
         <div class="card" style="margin-top:16px">
-          <h3 style="margin-bottom:16px">Add Products</h3>
+          <h3 style="margin-bottom:16px">Add Products</h3><select class="form-control" aria-label="Producer" style="margin-bottom:16px" [(ngModel)]="producerFilter" (ngModelChange)="loadProducts()"><option value="">All producers</option>@for(p of producers(); track p.id){<option [value]="p.id">{{p.name}}</option>}</select>
 
           @if (loadingProducts()) {
             <div style="text-align:center;padding:24px"><span class="spinner"></span></div>
@@ -80,6 +64,7 @@ interface CartItem {
           }
         </div>
 
+        <form class="card" style="margin-top:16px" [formGroup]="customerForm"><label class="form-label">Notes</label><textarea class="form-control" formControlName="notes" placeholder="Delivery instructions, special requests…"></textarea></form>
         <!-- Cart summary -->
         @if (cart().length > 0) {
           <div class="card" style="margin-top:16px">
@@ -154,6 +139,7 @@ interface CartItem {
   `]
 })
 export class OrderFormComponent implements OnInit {
+  readonly auth=inject(AuthService); private producerSvc=inject(ProducerService); producers=signal<Producer[]>([]);producerFilter='';
   private ordersSvc  = inject(OrdersService);
   private productSvc = inject(ProductService);
   private fb         = inject(FormBuilder);
@@ -171,11 +157,13 @@ export class OrderFormComponent implements OnInit {
     notes:          [''],
   });
 
-  ngOnInit() {
-    this.productSvc.list({ active_only: true, limit: 100 }).subscribe({
+  ngOnInit() {this.producerSvc.list().subscribe(r=>this.producers.set(r.data)); this.loadProducts();}
+  loadProducts() {
+    this.loadingProducts.set(true);
+    this.productSvc.list({ active_only: true, limit: 100, farm_id:this.producerFilter||undefined }).subscribe({
       next:  res => {
-        console.log(res)
-        this.products.set((res.data as unknown as PaginatedResponse<Product>).data); this.loadingProducts.set(false); },
+        
+        this.products.set((res.data).data); this.loadingProducts.set(false); },
       error: ()  => this.loadingProducts.set(false),
     });
   }
@@ -209,19 +197,20 @@ export class OrderFormComponent implements OnInit {
   }
 
   submit() {
+    if (this.customerForm.invalid) { this.customerForm.markAllAsTouched(); return; }
     if (this.cart().length === 0) { this.error.set('Add at least one product'); return; }
     this.submitting.set(true);
     this.error.set('');
 
     const f = this.customerForm.getRawValue();
     this.ordersSvc.create({
-      customer_name:  f.customer_name  || undefined,
-      customer_email: f.customer_email || undefined,
+      customer_name:  [this.auth.currentUser()?.first_name,this.auth.currentUser()?.last_name].filter(Boolean).join(' '),
+      customer_email: this.auth.currentUser()?.email,
       notes:          f.notes          || undefined,
       items: this.cart().map(i => ({ product_id: i.product.id, quantity: i.quantity })),
     }).subscribe({
       next:  res => {
-        console.log(res)
+        
         if (res.data.orders.length === 1) {
           this.router.navigate(['/orders', res.data.orders[0].id]);
         } else {

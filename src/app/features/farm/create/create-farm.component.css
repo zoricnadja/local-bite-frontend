@@ -22,12 +22,6 @@ textarea.form-control { resize:vertical; }
 .photo-preview { margin-top:8px; width:100%; max-height:180px; object-fit:cover;
     border-radius:6px; border:1px solid var(--border,#e5e7eb); }
 
-.btn-row    { margin-top:24px; display:flex; gap:10px; }
-.btn        { padding:9px 18px; border-radius:6px; border:none; cursor:pointer;
-    font-size:.9rem; font-weight:500; transition:opacity .15s; }
-.btn:disabled    { opacity:.5; cursor:not-allowed; }
-.btn-primary     { background:var(--bg,#2563eb); color:#fff; }
-.btn-primary:hover { opacity:.9; }
 
 .alert       { margin-top:16px; padding:12px; border-radius:6px; font-size:.9rem; }
 .alert-danger { background:#fef2f2; color:#991b1b; }

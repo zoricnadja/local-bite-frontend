@@ -1,3 +1,6 @@
+import { requiredText, websiteUrl } from '../../shared/form-validators';
+import { FieldErrorsDirective } from '../../shared/field-errors.directive';
+import { CanDirective } from '../../core/auth/can.directive';
 import { Component, inject, signal, effect, computed } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
@@ -10,7 +13,7 @@ import {FarmService} from "../../core/services/farm.service";
 @Component({
   selector: 'app-profile',
   standalone: true,
-  imports: [CommonModule, DatePipe, ReactiveFormsModule, RouterLink],
+  imports: [FieldErrorsDirective, CanDirective, CommonModule, DatePipe, ReactiveFormsModule, RouterLink],
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.css'],
 })
@@ -46,20 +49,20 @@ export class ProfileComponent {
 
   // ── Forms ──────────────────────────────────────────────────────────────────
   userForm = this.fb.group({
-    first_name:    ['', Validators.required],
-    last_name:     ['', Validators.required],
+    first_name:    ['', requiredText],
+    last_name:     ['', requiredText],
     email:         ['', [Validators.required, Validators.email]],
-    address:       ['', Validators.required],
+    address:       ['', requiredText],
     phone:         [''],
     date_of_birth: [''],
   });
 
   farmForm = this.fb.group({
-    name:        ['', Validators.required],
-    address:     ['', Validators.required],
+    name:        ['', requiredText],
+    address:     ['', requiredText],
     phone:       [''],
     description: [''],
-    website:     [''],
+    website:     ['', websiteUrl],
   });
 
   // ── Derived ────────────────────────────────────────────────────────────────
@@ -72,7 +75,8 @@ export class ProfileComponent {
   // ── Load farm when farmId changes ──────────────────────────────────────────
   private _farmEffect = effect(() => {
     const id = this.farmId();
-    if (!id) { this.farm.set(null); return; }
+    this.farmError.set(null);
+    if (this.auth.isCustomer() || !id) { this.farm.set(null); return; }
     this.farmLoading.set(true);
     this.farmSvc.getById(id).subscribe({
       next:  f  => { this.farm.set(f.data); this.farmLoading.set(false); },
@@ -98,7 +102,7 @@ export class ProfileComponent {
   cancelEditUser() { this.editingUser.set(false); }
 
   saveUser() {
-    if (this.userForm.invalid) return;
+    if (this.userForm.invalid) { this.userForm.markAllAsTouched(); return; }
     this.userSaving.set(true);
     this.userError.set(null);
 
@@ -114,7 +118,7 @@ export class ProfileComponent {
 
     this.userSvc.update(this.currentUser()!.id, req).subscribe({
       next: updated => {
-        console.log(updated)
+        
         this.auth.setToken(this.auth.token()!); // keep token fresh in storage
         this.auth['setUser'](updated.data);           // update signal
         this.editingUser.set(false);
@@ -144,7 +148,7 @@ export class ProfileComponent {
   cancelEditFarm() { this.editingFarm.set(false); }
 
   saveFarm() {
-    if (this.farmForm.invalid) return;
+    if (this.farmForm.invalid) { this.farmForm.markAllAsTouched(); return; }
     this.farmSaving.set(true);
     this.farmSaveError.set(null);
 

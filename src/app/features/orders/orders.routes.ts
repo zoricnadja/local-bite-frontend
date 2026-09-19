@@ -1,3 +1,4 @@
+import { permissionGuard } from '../../core/auth/permissions';
 import { Routes } from '@angular/router';
 
 export const ORDERS_ROUTES: Routes = [
@@ -7,12 +8,12 @@ export const ORDERS_ROUTES: Routes = [
       import('./list/orders-list.component').then(m => m.OrdersListComponent),
   },
   {
-    path: 'analytics',
+    path: 'analytics', canActivate: [permissionGuard('analytics')],
     loadComponent: () =>
       import('./analytics/orders-analytics.component').then(m => m.OrdersAnalyticsComponent),
   },
   {
-    path: 'new',
+    path: 'new', canActivate: [permissionGuard('shop')],
     loadComponent: () =>
       import('./form/order-form.component').then(m => m.OrderFormComponent),
   },

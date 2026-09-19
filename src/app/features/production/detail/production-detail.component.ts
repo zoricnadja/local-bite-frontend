@@ -1,3 +1,6 @@
+import { requiredText } from '../../../shared/form-validators';
+import { FieldErrorsDirective } from '../../../shared/field-errors.directive';
+import { CanDirective } from '../../../core/auth/can.directive';
 import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -10,7 +13,7 @@ import { RawMaterial } from '../../../shared/models/raw-material.models';
 @Component({
   selector: 'app-production-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink, ReactiveFormsModule],
+  imports: [FieldErrorsDirective, CanDirective, CommonModule, RouterLink, ReactiveFormsModule],
   template: `
     <div class="page">
       @if (loading()) {
@@ -27,20 +30,38 @@ import { RawMaterial } from '../../../shared/models/raw-material.models';
           </div>
           <div class="actions">
             <a [routerLink]="['/production', batch()!.id, 'edit']" class="btn btn-secondary">✏️ Edit</a>
-            <button class="btn btn-danger" (click)="confirmDelete()">🗑️ Delete</button>
+            <button *appCan="'deleteFarmData'" class="btn btn-danger" (click)="confirmDelete()">🗑️ Delete</button>
           </div>
         </div>
 
+        @if (batch()!.status === 'CANCELLED') { <div class="cancelled-notice" style="margin-bottom:20px"><strong>Production cancelled</strong><p>This batch will not be completed.</p></div> }
         <!-- Status transitions -->
         @if (nextStatuses().length > 0) {
           <div class="alert alert-success" style="margin-bottom:20px;display:flex;align-items:center;gap:12px">
             <span>Advance status:</span>
             @for (s of nextStatuses(); track s) {
-              <button class="btn btn-sm btn-primary" (click)="advanceStatus(s)">→ {{ s }}</button>
+              <button [class]="s === 'CANCELLED' ? 'btn btn-sm btn-danger' : 'btn btn-sm btn-primary'" (click)="advanceStatus(s)">→ {{ s }}</button>
             }
           </div>
         }
 
+        @if (statusError()) { <div class="alert alert-danger">{{ statusError() }}</div> }
+        @if (showCompletion) {
+          <form class="card" style="margin-bottom:20px" [formGroup]="outputForm" (ngSubmit)="complete()">
+            <h3>Production result</h3><p class="text-muted">Enter the measured output. Completion creates one product in Storage.</p>
+            <div class="form-grid">
+              <div class="form-group"><label class="form-label">Product name *</label><input class="form-control" formControlName="output_name" /></div>
+              <div class="form-group"><label class="form-label">Product type *</label><select class="form-control" formControlName="output_type"><option value="">Select type…</option>@for (type of outputTypes; track type) {<option [value]="type">{{type}}</option>}</select></div>
+              <div class="form-group"><label class="form-label">Quantity obtained *</label><input class="form-control" type="number" min="0.001" step="0.001" formControlName="output_quantity" /></div>
+              <div class="form-group"><label class="form-label">Unit *</label><select class="form-control" formControlName="output_unit">@for(unit of ['kg','g','l','ml','pcs']; track unit){<option [value]="unit">{{unit}}</option>}</select></div>
+              <div class="form-group"><label class="form-label">Production end *</label><input class="form-control" type="date" formControlName="end_date" /></div>
+              <div class="form-group"><label class="form-label">Product expiry</label><input class="form-control" type="date" formControlName="output_expiry_date" /></div>
+            </div>
+            <button type="submit" class="btn btn-primary" [disabled]="savingStatus()">Complete production</button>
+            <button type="button" class="quiet-link" (click)="showCompletion=false">Cancel</button>
+          </form>
+        }
+        @if (batch()!.output_quantity) {<div class="card" style="margin-bottom:20px"><h3>Production result</h3><p>{{batch()!.output_name}} · {{batch()!.output_quantity}} {{batch()!.output_unit}}</p><a routerLink="/product" class="quiet-link">View Storage →</a><p class="text-muted text-sm">New stock appears automatically after synchronization.</p></div>}
         <div class="detail-layout">
 
           <!-- Batch info -->
@@ -76,7 +97,7 @@ import { RawMaterial } from '../../../shared/models/raw-material.models';
           <div class="card" style="margin-top:16px">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
               <h3>Process Steps</h3>
-              <button class="btn btn-sm btn-secondary" (click)="showAddStep = !showAddStep">
+              <button *ngIf="batch()!.status !== 'COMPLETED' && batch()!.status !== 'CANCELLED'" class="btn btn-sm btn-secondary" (click)="showAddStep = !showAddStep">
                 {{ showAddStep ? 'Cancel' : '+ Add Step' }}
               </button>
             </div>
@@ -105,7 +126,7 @@ import { RawMaterial } from '../../../shared/models/raw-material.models';
                     <input class="form-control" type="number" formControlName="temperature" step="0.1" />
                   </div>
                 </div>
-                <button class="btn btn-primary btn-sm" type="submit" [disabled]="stepForm.invalid" style="margin-top:10px">
+                <button class="btn btn-primary btn-sm" type="submit" [disabled]="false" style="margin-top:10px">
                   Add Step
                 </button>
               </form>
@@ -131,7 +152,7 @@ import { RawMaterial } from '../../../shared/models/raw-material.models';
                         @if (s.temperature) { <span>🌡 {{ s.temperature }}°C</span> }
                       </div>
                     </div>
-                    <button class="btn btn-sm btn-ghost" (click)="deleteStep(s)" title="Remove">✕</button>
+                    <button class="icon-action" [disabled]="batch()!.status === 'COMPLETED' || batch()!.status === 'CANCELLED'" (click)="deleteStep(s)" title="Delete step" aria-label="Delete step"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/></svg></button>
                   </div>
                 }
               </div>
@@ -142,7 +163,7 @@ import { RawMaterial } from '../../../shared/models/raw-material.models';
           <div class="card" style="margin-top:16px">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
               <h3>Raw Materials</h3>
-              <button class="btn btn-sm btn-secondary" (click)="toggleAddMaterial()">
+              <button *ngIf="batch()!.status !== 'COMPLETED' && batch()!.status !== 'CANCELLED'" class="btn btn-sm btn-secondary" (click)="toggleAddMaterial()">
                 {{ showAddMaterial ? 'Cancel' : '+ Add Material' }}
               </button>
             </div>
@@ -152,7 +173,7 @@ import { RawMaterial } from '../../../shared/models/raw-material.models';
                 <div class="form-grid">
                   <div class="form-group form-full">
                     <label class="form-label">Raw Material *</label>
-                    <select class="form-control" formControlName="raw_material_id">
+                    <select class="form-control" formControlName="raw_material_id" (change)="selectMaterial()">
                       <option value="">Select material…</option>
                       @for (m of availableMaterials(); track m.id) {
                         <option [value]="m.id">{{ m.name }} ({{ m.quantity }} {{ m.unit }} available)</option>
@@ -174,7 +195,7 @@ import { RawMaterial } from '../../../shared/models/raw-material.models';
                     </select>
                   </div>
                 </div>
-                <button class="btn btn-primary btn-sm" type="submit" [disabled]="materialForm.invalid" style="margin-top:10px">
+                <button class="btn btn-primary btn-sm" type="submit" [disabled]="false" style="margin-top:10px">
                   Add Material
                 </button>
               </form>
@@ -206,7 +227,7 @@ import { RawMaterial } from '../../../shared/models/raw-material.models';
                       <td class="text-muted">{{ m.origin ?? '—' }}</td>
                       <td class="text-muted">{{ m.supplier ?? '—' }}</td>
                       <td>
-                        <button class="btn btn-sm btn-ghost" (click)="removeMaterial(m)" title="Remove">✕</button>
+                        <button *ngIf="batch()!.status !== 'COMPLETED'" class="icon-action" [disabled]="batch()!.status === 'CANCELLED'" (click)="removeMaterial(m)" title="Delete material" aria-label="Delete material"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/></svg></button>
                       </td>
                     </tr>
                   }
@@ -252,6 +273,16 @@ export class ProductionDetailComponent implements OnInit {
   showAddStep        = false;
   showAddMaterial    = false;
 
+  showCompletion=false;
+  savingStatus=signal(false); statusError=signal('');
+  outputTypes=['meat','dairy','vegetable','fruit','cheese','sausage','honey','other'];
+  outputForm=this.fb.group({output_name:['',requiredText],output_type:['',Validators.required],output_quantity:[null as number|null,[Validators.required,Validators.min(0.001)]],output_unit:['kg',Validators.required],end_date:[new Date().toISOString().slice(0,10),Validators.required],output_expiry_date:['']});
+  complete() {
+    if(this.outputForm.invalid){this.outputForm.markAllAsTouched();return;}
+    const f=this.outputForm.getRawValue();
+    this.savingStatus.set(true);this.statusError.set('');
+    this.svc.updateBatch(this.id,{status:'COMPLETED',output_name:f.output_name!,output_type:f.output_type!,output_quantity:Number(f.output_quantity),output_unit:f.output_unit!,end_date:f.end_date!,output_expiry_date:f.output_expiry_date||undefined}).subscribe({next:r=>{this.batch.set(r.data);this.showCompletion=false;this.savingStatus.set(false);},error:e=>{this.statusError.set(e.error?.error??'Could not complete production');this.savingStatus.set(false);}});
+  }
   private id = '';
 
   nextStatuses = () => {
@@ -262,7 +293,7 @@ export class ProductionDetailComponent implements OnInit {
 
   stepForm = this.fb.group({
     step_order:     [1, [Validators.required, Validators.min(1)]],
-    name:           ['', Validators.required],
+    name:           ['', requiredText],
     description:    [''],
     duration_hours: [null as number | null],
     temperature:    [null as number | null],
@@ -282,9 +313,10 @@ export class ProductionDetailComponent implements OnInit {
 
   load() {
     this.loading.set(true);
+    this.materialsSvc.list({ limit: 100 }).subscribe(res => this.availableMaterials.set(res.data.data));
     this.svc.getBatch(this.id).subscribe({
       next:  res => {
-        this.batch.set(res.data as unknown as ProductionBatch);
+        this.batch.set(res.data);
         this.loading.set(false);
       },
       error: ()  => this.loading.set(false),
@@ -292,13 +324,13 @@ export class ProductionDetailComponent implements OnInit {
   }
 
   advanceStatus(status: BatchStatus) {
-    this.svc.updateBatch(this.id, { status }).subscribe(res => {
-      this.batch.set(res.data as unknown as ProductionBatch)
-    });
+    if(status==='COMPLETED'){this.outputForm.patchValue({output_name:this.batch()!.name});this.showCompletion=true;return;}
+    this.statusError.set('');
+    this.svc.updateBatch(this.id,{status}).subscribe({next:res=>this.batch.set(res.data),error:e=>this.statusError.set(e.error?.error??'Could not change status')});
   }
 
   addStep() {
-    if (this.stepForm.invalid) return;
+    if (this.stepForm.invalid) { this.stepForm.markAllAsTouched(); return; }
     this.stepError.set('');
 
     const raw = this.stepForm.getRawValue();
@@ -315,7 +347,7 @@ export class ProductionDetailComponent implements OnInit {
         this.load();
       },
       error: err => {
-        console.log(err)
+        
          this.stepError.set(err.error?.error ?? 'Failed to save'); this.loading.set(false);
       }
   });
@@ -330,8 +362,16 @@ export class ProductionDetailComponent implements OnInit {
     this.showAddMaterial = !this.showAddMaterial;
   }
 
+  selectMaterial() {
+    const material = this.availableMaterials().find(m => m.id === this.materialForm.controls.raw_material_id.value);
+    if (!material) return;
+    this.materialForm.controls.unit.setValue(material.unit);
+    this.materialForm.controls.quantity_used.setValidators([Validators.required, Validators.min(0.001), Validators.max(Number(material.quantity))]);
+    this.materialForm.controls.quantity_used.updateValueAndValidity();
+  }
+
   addMaterial() {
-    if (this.materialForm.invalid) return;
+    if (this.materialForm.invalid) { this.materialForm.markAllAsTouched(); return; }
     this.materialError.set('');
 
     const raw = this.materialForm.getRawValue();

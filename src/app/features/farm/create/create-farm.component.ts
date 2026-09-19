@@ -1,3 +1,5 @@
+import { requiredText, websiteUrl } from '../../../shared/form-validators';
+import { FieldErrorsDirective } from '../../../shared/field-errors.directive';
 import { Component, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -9,7 +11,7 @@ import { Farm } from '../../../shared/models/auth.models';
 @Component({
   selector: 'app-create-farm',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [FieldErrorsDirective, CommonModule, ReactiveFormsModule],
   templateUrl: './create-farm.component.html',
   styleUrls: ['./create-farm.component.css'],
 })
@@ -25,14 +27,15 @@ export class CreateFarmComponent {
 
   form = this.fb.group({
     name:        ['', [Validators.required, Validators.minLength(2)]],
-    address:     ['', Validators.required],
+    address:     ['', requiredText],
     phone:       [''],
     description: [''],
-    website:     [''],
+    website:     ['', websiteUrl],
   });
 
   onSubmit(): void {
-    if (this.form.invalid || this.loading()) return;
+    if (this.form.invalid) { this.form.markAllAsTouched(); return; }
+    if (this.loading()) return;
     this.error.set(null);
     this.loading.set(true);
 

@@ -10,9 +10,9 @@ export class ProductionService {
 
   constructor(private http: HttpClient) {}
 
-  listBatches(query: BatchListQuery = {}): Observable<PaginatedResponse<ProductionBatch>> {
+  listBatches(query: BatchListQuery = {}): Observable<ApiResponse<PaginatedResponse<ProductionBatch>>> {
     const params = this.buildParams(query as Record<string, unknown>);
-    return this.http.get<PaginatedResponse<ProductionBatch>>(`${this.BASE}/batches`, { params });
+    return this.http.get<ApiResponse<PaginatedResponse<ProductionBatch>>>(`${this.BASE}/batches`, { params });
   }
 
   getBatch(id: string): Observable<ApiResponse<ProductionBatch>> {

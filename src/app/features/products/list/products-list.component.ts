@@ -1,3 +1,10 @@
+import { AuthenticatedMediaDirective } from '../../../core/auth/authenticated-media.directive';
+import { ActivatedRoute } from '@angular/router';
+import { ProducerService, Producer } from '../../../core/services/producer.service';
+import { DestroyRef } from '@angular/core';
+import { interval } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { CanDirective } from '../../../core/auth/can.directive';
 import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
@@ -10,15 +17,15 @@ import {AuthService} from "../../../core/auth/auth.service";
 @Component({
   selector: 'app-products-list',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule],
+  imports: [AuthenticatedMediaDirective, CanDirective, CommonModule, RouterLink, FormsModule],
   template: `
     <div class="page">
       <div class="page-header">
         <div>
-          <h1 class="page-title">Products</h1>
-          <p class="page-subtitle">{{ total() }} products listed</p>
+          <h1 class="page-title">{{storage ? 'Storage' : 'On Sale'}}</h1>
+          <p class="page-subtitle">{{ total() }} products {{storage ? 'in storage' : 'on sale'}}</p>
         </div>
-        <a routerLink="new" class="btn btn-primary">+ Add Product</a>
+        <a *appCan="'manageProduction'" routerLink="/production/new" class="btn btn-primary">+ Start production</a>
       </div>
 
       <div class="search-bar">
@@ -35,10 +42,7 @@ import {AuthService} from "../../../core/auth/auth.service";
           <option value="honey">Honey</option>
           <option value="other">Other</option>
         </select>
-        <label class="toggle-label">
-          <input type="checkbox" [(ngModel)]="activeOnly" (ngModelChange)="load()" />
-          Active only
-        </label>
+        @if (authSvc.isCustomer()) {<select class="form-control" aria-label="Producer" style="width:auto" [(ngModel)]="producerFilter" (ngModelChange)="setPage(1)"><option value="">All producers</option>@for(p of producers(); track p.id){<option [value]="p.id">{{p.name}}</option>}</select>}
       </div>
 
       @if (loading()) {
@@ -47,7 +51,7 @@ import {AuthService} from "../../../core/auth/auth.service";
         <div class="empty-state">
           <div class="empty-state-icon">📦</div>
           <div class="empty-state-text">No products found</div>
-          <a routerLink="new" class="btn btn-primary" style="margin-top:16px">Add your first product</a>
+          <p *appCan="'manageProduction'" class="text-muted">Completed production appears in Storage. Edit its price and place it on sale when ready.</p>
         </div>
       } @else {
         <div class="product-grid">
@@ -55,17 +59,17 @@ import {AuthService} from "../../../core/auth/auth.service";
             <div class="product-card" [class.inactive]="!p.is_active">
               <div class="product-image">
                 @if (p.image_path) {
-                  <img [src]="imageUrl(p)" [alt]="p.name" />
+                  <img [authenticatedMedia]="imageUrl(p)" [alt]="p.name" />
                 } @else {
                   <div class="product-image-placeholder">📦</div>
                 }
                 <span class="product-type-badge">{{ p.product_type }}</span>
                 @if (!p.is_active) {
-                  <span class="inactive-overlay">Inactive</span>
+                  <span class="inactive-overlay">Storage</span>
                 }
               </div>
               <div class="product-body">
-                <div class="product-name">{{ p.name }}</div>
+                <div class="product-name">{{ p.name }}</div>@if(authSvc.isCustomer()){<p class="text-muted text-sm">{{producerName(p.farm_id)}}</p>}
                 @if (p.description) {
                   <div class="product-desc">{{ p.description }}</div>
                 }
@@ -75,9 +79,9 @@ import {AuthService} from "../../../core/auth/auth.service";
                 </div>
               </div>
               <div class="product-actions">
-                <a [routerLink]="p.id" class="btn btn-sm btn-secondary" style="flex:1;justify-content:center">View</a>
-                <a [routerLink]="[p.id, 'edit']" class="btn btn-sm btn-ghost" title="Edit">✏️</a>
-                <button class="btn btn-sm btn-ghost" (click)="confirmDelete(p)" title="Delete">🗑️</button>
+                <a [routerLink]="['/products',p.id]" class="quiet-link">View</a>
+                <a *appCan="'manageProducts'" [routerLink]="['/products',p.id, 'edit']" class="icon-action" aria-label="Edit" title="Edit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m16 3 5 5-13 13H3v-5L16 3ZM13 6l5 5"/></svg></a>
+                <button *appCan="'deleteFarmData'" class="btn btn-sm btn-ghost" (click)="confirmDelete(p)" title="Delete">🗑️</button>
               </div>
             </div>
           }
@@ -117,8 +121,12 @@ import {AuthService} from "../../../core/auth/auth.service";
 })
 export class ProductsListComponent implements OnInit {
   private svc = inject(ProductService);
-  private authSvc = inject(AuthService);
+  readonly authSvc = inject(AuthService);
 
+  private route=inject(ActivatedRoute); private producerSvc=inject(ProducerService); private destroyRef=inject(DestroyRef);
+  storage=this.route.snapshot.data['storage']===true;
+  producers=signal<Producer[]>([]);producerFilter='';
+  producerName(id:string){return this.producers().find(p=>p.id===id)?.name??'Producer';}
   items    = signal<Product[]>([]);
   loading  = signal(true);
   total    = signal(0);
@@ -132,21 +140,22 @@ export class ProductsListComponent implements OnInit {
   private searchTimer: any;
   totalPages = () => Math.ceil(this.total() / this.pageSize);
 
-  ngOnInit() { this.load(); }
+  ngOnInit() { this.load();this.producerSvc.list().subscribe(r=>this.producers.set(r.data));if(this.storage) interval(5000).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(()=>this.load()); }
 
   load() {
     this.loading.set(true);
-    console.log(this.authSvc.isCustomer())
-    if (this.authSvc.isCustomer()){
+    
+    if (this.authSvc.isCustomer() || this.authSvc.role() === 'SystemAdmin'){
       this.svc.list({
         page: this.page(),
         limit: this.pageSize,
         search: this.search || undefined,
         product_type: this.typeFilter || undefined,
-        active_only: this.activeOnly || undefined,
+        is_active: !this.storage,
+        farm_id: this.producerFilter || undefined,
       }).subscribe({
         next: res => {
-          let data = res.data as unknown as PaginatedResponse<Product>
+          let data = res.data
           this.items.set(data.data);
           this.total.set(data.total);
           this.loading.set(false);
@@ -160,10 +169,11 @@ export class ProductsListComponent implements OnInit {
         limit: this.pageSize,
         search: this.search || undefined,
         product_type: this.typeFilter || undefined,
-        active_only: this.activeOnly || undefined,
+        is_active: !this.storage,
+        farm_id: this.producerFilter || undefined,
       }).subscribe({
         next: res => {
-          let data = res.data as unknown as PaginatedResponse<Product>
+          let data = res.data
           this.items.set(data.data);
           this.total.set(data.total);
           this.loading.set(false);

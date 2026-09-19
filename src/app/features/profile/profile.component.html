@@ -49,8 +49,8 @@
             </div>
 
             <!-- Delete account -->
-            <div class="danger-zone">
-                <span class="danger-label">Danger zone</span>
+            <div class="danger-zone" *ngIf="currentUser()?.role !== 'Worker'">
+
                 @if (!confirmDeleteUser()) {
                     <button class="btn btn-danger-ghost" (click)="confirmDeleteUser.set(true)">Delete account</button>
                 } @else {
@@ -106,7 +106,7 @@
                 }
 
                 <div class="btn-row">
-                    <button class="btn btn-primary" type="submit" [disabled]="userForm.invalid || userSaving()">
+                    <button class="btn btn-primary" type="submit" [disabled]="userSaving()">
                         {{ userSaving() ? 'Saving…' : 'Save changes' }}
                     </button>
                     <button class="btn btn-ghost" type="button" (click)="cancelEditUser()">Cancel</button>
@@ -116,7 +116,7 @@
     </div>
 
     <!-- ── Farm card ─────────────────────────────────────────────────────────── -->
-    <div class="card">
+    <div class="card" *appCan="'viewFarm'">
         <h2 class="section-title">Farm</h2>
 
         @if (farmLoading()) {
@@ -127,7 +127,7 @@
 
         } @else if (!farmId()) {
             <div class="empty-state">You don't have a farm yet.</div>
-            <a class="btn btn-primary" style="margin-top:12px;display:inline-block" routerLink="/farm/create">Add farm</a>
+            <a *appCan="'manageFarm'" class="btn btn-primary" style="margin-top:12px;display:inline-block" routerLink="/farm/create">Add farm</a>
 
         } @else if (farm(); as f) {
 
@@ -135,7 +135,7 @@
             @if (!editingFarm()) {
                 <div class="farm-header">
                     <div class="full-name">{{ f.name }}</div>
-                    <button class="btn btn-ghost" (click)="startEditFarm()">Edit</button>
+                    <button *appCan="'manageFarm'" class="btn btn-ghost" (click)="startEditFarm()">Edit</button>
                 </div>
 
                 <div class="field-grid" style="margin-top:12px">
@@ -168,8 +168,8 @@
                 </div>
 
                 <!-- Delete farm -->
-                <div class="danger-zone">
-                    <span class="danger-label">Danger zone</span>
+                <div class="danger-zone" *appCan="'manageFarm'">
+
                     @if (!confirmDeleteFarm()) {
                         <button class="btn btn-danger-ghost" (click)="confirmDeleteFarm.set(true)">Delete farm</button>
                     } @else {
@@ -219,7 +219,7 @@
                     }
 
                     <div class="btn-row">
-                        <button class="btn btn-primary" type="submit" [disabled]="farmForm.invalid || farmSaving()">
+                        <button class="btn btn-primary" type="submit" [disabled]="farmSaving()">
                             {{ farmSaving() ? 'Saving…' : 'Save changes' }}
                         </button>
                         <button class="btn btn-ghost" type="button" (click)="cancelEditFarm()">Cancel</button>

@@ -42,6 +42,7 @@ export interface UpdateStatusRequest {
 }
 
 export interface OrderListQuery {
+  farm_id?: string;
   page?: number;
   limit?: number;
   status?: OrderStatus;

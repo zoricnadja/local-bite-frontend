@@ -7,6 +7,7 @@ export interface RawMaterial {
   unit: string;
   supplier: string | null;
   origin: string | null;
+  received_date: string | null;
   harvest_date: string | null;
   expiry_date: string | null;
   notes: string | null;
@@ -23,6 +24,7 @@ export interface RawMaterialRequest {
   unit?: string;
   supplier?: string;
   origin?: string;
+  received_date?: string;
   harvest_date?: string;
   expiry_date?: string;
   notes?: string;

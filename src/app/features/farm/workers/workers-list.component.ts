@@ -88,11 +88,8 @@ export class WorkersListComponent implements OnInit {
     this.loading.set(true);
     this.error.set(null);
     this.farmApi.listWorkers(fid).subscribe({
-      next: (res: any) => {
-        // Support both shapes: { data: { data: WorkerOut[] } } and { data: WorkerOut[] }
-        const payload = res?.data;
-        const list: WorkerOut[] = Array.isArray(payload?.data) ? payload.data : Array.isArray(payload) ? payload : [];
-        this.workers.set(list);
+      next: res => {
+        this.workers.set(res.data);
         this.loading.set(false);
       },
       error: (err) => {

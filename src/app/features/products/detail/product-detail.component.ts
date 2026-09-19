@@ -1,3 +1,5 @@
+import { AuthenticatedMediaDirective } from '../../../core/auth/authenticated-media.directive';
+import { CanDirective } from '../../../core/auth/can.directive';
 import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -7,7 +9,7 @@ import {Product, ProvenanceMaterial, ProvenanceResponse} from '../../../shared/m
 @Component({
   selector: 'app-product-detail',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [AuthenticatedMediaDirective, CanDirective, CommonModule, RouterLink],
   template: `
     <div class="page">
 
@@ -27,8 +29,8 @@ import {Product, ProvenanceMaterial, ProvenanceResponse} from '../../../shared/m
             </p>
           </div>
           <div class="actions">
-            <a [routerLink]="['/products', product()!.id, 'edit']" class="btn btn-secondary">✏️ Edit</a>
-            <button class="btn btn-danger" (click)="confirmDelete()">🗑️ Delete</button>
+            <a *appCan="'manageProducts'" [routerLink]="['/products', product()!.id, 'edit']" class="btn btn-secondary">✏️ Edit</a>
+            <button *appCan="'deleteFarmData'" class="btn btn-danger" (click)="confirmDelete()">🗑️ Delete</button>
           </div>
         </div>
 
@@ -38,11 +40,11 @@ import {Product, ProvenanceMaterial, ProvenanceResponse} from '../../../shared/m
           <div class="detail-sidebar">
             <div class="card" style="padding:0;overflow:hidden">
               @if (product()!.image_path) {
-                <img [src]="imageUrl()" style="width:100%;aspect-ratio:1;object-fit:cover" [alt]="product()!.name" />
+                <img [authenticatedMedia]="imageUrl()" style="width:100%;aspect-ratio:1;object-fit:cover" [alt]="product()!.name" />
               } @else {
                 <div class="image-placeholder">📦</div>
               }
-              <div style="padding:16px;display:flex;flex-direction:column;gap:10px">
+              <div *appCan="'manageProducts'" style="padding:16px;display:flex;flex-direction:column;gap:10px">
                 <label class="form-label">Product Image</label>
                 <input type="file" accept="image/*" (change)="onImageSelect($event)" style="font-size:0.8rem" />
                 @if (uploading()) {
@@ -57,13 +59,14 @@ import {Product, ProvenanceMaterial, ProvenanceResponse} from '../../../shared/m
             <div class="card" style="margin-top:16px;text-align:center">
               <div class="form-label" style="margin-bottom:12px">QR Code</div>
               @if (product()!.qr_path) {
-                <img [src]="qrUrl()" style="width:160px;height:160px;border:1px solid var(--border);border-radius:8px" alt="QR" />
+                <img [authenticatedMedia]="qrUrl()" style="width:160px;height:160px;border:1px solid var(--border);border-radius:8px" alt="QR" />
               } @else {
                 <div style="color:var(--text-muted);font-size:0.875rem">No QR generated yet</div>
               }
               <div style="margin-top:12px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
-                <a [href]="qrUrl()" download class="btn btn-sm btn-secondary">⬇ Download</a>
-                <button class="btn btn-sm btn-ghost" (click)="regenerateQr()">🔄 Regenerate</button>
+                <a [routerLink]="['/trace', product()!.qr_token]" class="btn btn-sm btn-secondary">Open traceability</a>
+                <a [authenticatedMedia]="qrUrl()" download class="btn btn-sm btn-secondary">⬇ Download</a>
+                <button *appCan="'deleteFarmData'" class="btn btn-sm btn-ghost" (click)="regenerateQr()">🔄 Regenerate</button>
               </div>
             </div>
           </div>
@@ -107,7 +110,7 @@ import {Product, ProvenanceMaterial, ProvenanceResponse} from '../../../shared/m
               </div>
             } @else if (provenance()) {
               <div class="card" style="margin-top:16px">
-                <h3 style="margin-bottom:16px">🌿 Provenance Chain</h3>
+                <h3 style="margin-bottom:16px">🌿 Provenance Chain</h3><div class="provenance-step"><div><div class="provenance-title">Product expiry</div><div>{{ product()!.expiry_date ? (product()!.expiry_date | date:'mediumDate') : 'Not recorded' }}</div></div></div>
 
                 @if (provenance()!.farm_name) {
                   <div class="provenance-step">
@@ -126,7 +129,7 @@ import {Product, ProvenanceMaterial, ProvenanceResponse} from '../../../shared/m
                       <div class="provenance-title">Production Batch: {{ provenance()!.batch!.name }}</div>
                       <div class="provenance-detail">
                         {{ provenance()!.batch!.process_type }} ·
-                        <span class="badge badge-completed">{{ provenance()!.batch!.status }}</span>
+                        <span [class]="'badge badge-' + provenance()!.batch!.status.toLowerCase()">{{ provenance()!.batch!.status }}</span>
                         @if (provenance()!.batch!.start_date) {
                           · {{ provenance()!.batch!.start_date }} → {{ provenance()!.batch!.end_date ?? 'ongoing' }}
                         }
@@ -141,7 +144,7 @@ import {Product, ProvenanceMaterial, ProvenanceResponse} from '../../../shared/m
                         <div class="provenance-title">Raw Materials</div>
                         <div class="materials-list">
                           @for (m of provenance()!.batch!.raw_materials; track m.id) {
-                            <span class="material-chip">{{ m.name }} · {{ m.quantity_used }} {{ m.unit }}</span>
+                            <div class="material-record"><strong>{{ m.name }} · {{ m.quantity_used }} {{ m.unit }}</strong><div>Origin: {{ m.origin || 'Not recorded' }} · Supplier: {{ m.supplier || 'Not recorded' }}</div><div>Received: {{ m.received_date ? (m.received_date | date:'mediumDate') : 'Not recorded' }} · Expiry: {{ m.expiry_date ? (m.expiry_date | date:'mediumDate') : 'Not recorded' }}</div></div>
                           }
                         </div>
                       </div>
@@ -197,6 +200,7 @@ import {Product, ProvenanceMaterial, ProvenanceResponse} from '../../../shared/m
     .provenance-title { font-weight: 700; font-size: 0.9rem; margin-bottom: 4px; }
     .provenance-detail { font-size: 0.85rem; color: var(--text-secondary); }
 
+    .material-record { width:100%; padding:12px; border-radius:8px; background:var(--surface-2); line-height:1.7; font-size:.85rem; }
     .materials-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
     .material-chip { background: var(--accent-soft); color: var(--accent); font-size: 0.75rem; font-weight: 600; padding: 3px 10px; border-radius: 100px; }
 
@@ -223,8 +227,8 @@ export class ProductDetailComponent implements OnInit {
 
     this.svc.getById(id).subscribe({
       next: res => {
-        console.log(res)
-        this.product.set(res.data as unknown as Product);
+        
+        this.product.set(res.data);
         this.loading.set(false);
         this.loadProvenance(id);
       },
@@ -234,7 +238,7 @@ export class ProductDetailComponent implements OnInit {
 
   loadProvenance(id: string) {
     this.svc.getProvenance(id).subscribe({
-      next:  res => { this.provenance.set(res.data as unknown as ProvenanceResponse); this.loadingProvenance.set(false); },
+      next:  res => { this.provenance.set(res.data); this.loadingProvenance.set(false); },
       error: ()  => this.loadingProvenance.set(false),
     });
   }
@@ -252,13 +256,13 @@ export class ProductDetailComponent implements OnInit {
     if (!file) return;
     this.uploading.set(true);
     this.svc.uploadImage(this.product()!.id, file).subscribe({
-      next: res => { console.log(res); this.product.set(res.data as unknown as Product); this.uploading.set(false); },
+      next: res => {  this.product.set(res.data); this.uploading.set(false); },
       error: () => this.uploading.set(false),
     });
   }
 
   regenerateQr() {
-    this.svc.regenerateQr(this.product()!.id).subscribe(res => { console.log(res); this.product.set(res.data as unknown as Product) }) ;
+    this.svc.regenerateQr(this.product()!.id).subscribe(res => {  this.product.set(res.data) }) ;
   }
 
   confirmDelete() {

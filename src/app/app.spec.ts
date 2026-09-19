@@ -1,23 +1,24 @@
 import { TestBed } from '@angular/core/testing';
-import { App } from './app';
+import { provideRouter } from '@angular/router';
+import { signal } from '@angular/core';
+import { AppComponent } from './app';
+import { AuthService } from './core/auth/auth.service';
 
-describe('App', () => {
-  beforeEach(async () => {
+describe('Role navigation', () => {
+  it('shows shopping navigation without farm administration to customers', async () => {
     await TestBed.configureTestingModule({
-      imports: [App],
+      imports: [AppComponent],
+      providers: [provideRouter([]), { provide: AuthService, useValue: {
+        role: signal('Customer'), isLoggedIn: signal(true), currentUser: signal({ email: 'customer@example.com', role: 'Customer' }),
+      } }],
     }).compileComponents();
-  });
-
-  it('should create the app', () => {
-    const fixture = TestBed.createComponent(App);
-    const app = fixture.componentInstance;
-    expect(app).toBeTruthy();
-  });
-
-  it('should render title', async () => {
-    const fixture = TestBed.createComponent(App);
-    await fixture.whenStable();
-    const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('Hello, local-bite-frontend');
+    const fixture = TestBed.createComponent(AppComponent);
+    fixture.detectChanges();
+    const nav = fixture.nativeElement.querySelector('nav').textContent;
+    expect(nav).toContain('On Sale');
+    expect(nav).toContain('Orders');
+    expect(nav).not.toContain('Employees');
+    expect(nav).not.toContain('Production');
+    expect(nav).not.toContain('Raw Materials');
   });
 });

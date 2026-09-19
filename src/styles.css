@@ -305,3 +305,20 @@ tbody tr:hover { background: var(--bg); }
 select.form-control { appearance: none; cursor: pointer; }
 
 .divider { height: 1px; background: var(--border); margin: 20px 0; }
+
+.field-error { color: var(--danger, #b42318); font-size: 0.8rem; margin-top: 5px; }
+[aria-invalid="true"] { border-color: var(--danger, #b42318) !important; }
+.cancelled-notice { padding: 16px; border: 1px solid #f0b8b8; background: #fff1f1; color: #9b2424; border-radius: 8px; }
+
+/* Shared action states, including component-local button styles. */
+body .btn, body .certificate { background:#2f6d42; color:#fff; border:1px solid #2f6d42; transition:background .15s,color .15s,border-color .15s; }
+body .btn:hover:not(:disabled):not([aria-disabled="true"]), body .certificate:hover { background:#d8eddb; color:#173b23; border-color:#9ac8a2; opacity:1; }
+body .btn:focus-visible, body .certificate:focus-visible { outline:3px solid #88b991; outline-offset:3px; }
+body .btn:disabled, body .btn[aria-disabled="true"] { background:#e2e5e3; color:#717872; border-color:#d2d6d3; opacity:1; cursor:not-allowed; }
+
+/* Quiet secondary actions, including monochrome edit/delete icons. */
+.icon-action,.quiet-link { display:inline-flex;align-items:center;justify-content:center;gap:4px;background:transparent!important;color:var(--text-muted)!important;border:0!important;box-shadow:none!important;text-decoration:none;cursor:pointer;border-radius:6px;font-size:.85rem;padding:6px 8px;min-height:32px; }
+.icon-action { width:32px;font-size:18px; }
+.icon-action:hover,.quiet-link:hover {background:var(--surface-2)!important;color:var(--text-primary)!important;}
+.icon-action svg {width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;}
+.icon-action:disabled {opacity:.4;cursor:not-allowed;}

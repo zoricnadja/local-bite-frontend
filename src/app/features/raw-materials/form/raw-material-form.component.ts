@@ -1,3 +1,6 @@
+import { dateOrder } from '../../../shared/form-validators';
+import { requiredText } from '../../../shared/form-validators';
+import { FieldErrorsDirective } from '../../../shared/field-errors.directive';
 import { Component, OnInit, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -8,7 +11,7 @@ import {RawMaterial, RawMaterialRequest} from '../../../shared/models/raw-materi
 @Component({
   selector: 'app-raw-material-form',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterLink],
+  imports: [FieldErrorsDirective, ReactiveFormsModule, RouterLink],
   templateUrl: './raw-material-form.component.html',
 })
 export class RawMaterialFormComponent implements OnInit {
@@ -23,28 +26,29 @@ export class RawMaterialFormComponent implements OnInit {
   private id = '';
 
   form = this.fb.group({
-    name:                ['', Validators.required],
+    name:                ['', requiredText],
     material_type:       ['', Validators.required],
     quantity:            [0,  [Validators.required, Validators.min(0)]],
     unit:                ['kg', Validators.required],
     supplier:            [''],
     origin:              [''],
+    received_date:       [''],
     harvest_date:        [''],
     expiry_date:         [''],
     notes:               [''],
-    low_stock_threshold: [null as number | null],
-  });
+    low_stock_threshold: [null as number | null, Validators.min(0)],
+  }, { validators: [dateOrder('harvest_date', 'expiry_date'), dateOrder('received_date', 'expiry_date')] });
 
   ngOnInit() {
     this.id = this.route.snapshot.paramMap.get('id') ?? '';
     if (this.id) {
       this.isEdit.set(true);
-      this.svc.getById(this.id).subscribe(res => this.form.patchValue((res.data as unknown as RawMaterial)));
+      this.svc.getById(this.id).subscribe(res => this.form.patchValue((res.data)));
     }
   }
 
   submit() {
-    if (this.form.invalid) return;
+    if (this.form.invalid) { this.form.markAllAsTouched(); return; }
     this.loading.set(true);
     this.error.set('');
 
@@ -56,10 +60,11 @@ export class RawMaterialFormComponent implements OnInit {
       unit: raw.unit!,
       supplier: raw.supplier!,
       origin: raw.origin!,
-      harvest_date: raw.harvest_date!,
-      expiry_date: raw.expiry_date!,
+      received_date: raw.received_date || undefined,
+      harvest_date: raw.harvest_date || undefined,
+      expiry_date: raw.expiry_date || undefined,
       notes: raw.notes!,
-      low_stock_threshold: Number(raw.low_stock_threshold!),
+      low_stock_threshold: raw.low_stock_threshold == null ? undefined : Number(raw.low_stock_threshold),
     };
     const obs = this.isEdit()
       ? this.svc.update(this.id, request)

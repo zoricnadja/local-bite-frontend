@@ -1,7 +1,7 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { tap } from 'rxjs/operators';
+import { map, tap } from 'rxjs/operators';
 import { Observable } from 'rxjs';
 import { LoginRequest, LoginResponse, RegisterRequest, User } from '../../shared/models/auth.models';
 
@@ -39,7 +39,13 @@ export class AuthService {
   }
 
   me(): Observable<User> {
-    return this.http.get<User>(`${this.BASE}/me`);
+    return this.http.get<User>(`${this.BASE}/me`, { observe: 'response' }).pipe(
+      tap(response => {
+        const token = response.headers.get('x-session-token');
+        if (token) this.setToken(token);
+      }),
+      map(response => response.body!)
+    );
   }
 
   refreshUser(): Observable<User> {
@@ -56,10 +62,9 @@ export class AuthService {
     this.router.navigate(['/auth/login']);
   }
 
-  private persist(token: string, user: User): void {
+  private persist(token: string, user?: User): void {
     this.setToken(token)
-    this.setUser(user)
-    console.log(token)
+    if (user) this.setUser(user)
   }
 
   setToken(token: string): void {
@@ -69,9 +74,7 @@ export class AuthService {
 
   private setUser(user: User): void {
     localStorage.setItem(USER_KEY, JSON.stringify(user));
-    console.log("Incoming user:", user);
     this._user.set(user);
-    console.log(this.farmId())
   }
 
   private loadUser(): User | null {

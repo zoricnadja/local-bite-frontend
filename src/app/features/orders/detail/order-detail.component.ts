@@ -1,3 +1,4 @@
+import { CanDirective } from '../../../core/auth/can.directive';
 import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -8,7 +9,7 @@ import {AuthService} from "../../../core/auth/auth.service";
 @Component({
   selector: 'app-order-detail',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CanDirective, CommonModule],
   template: `
     <div class="page">
       @if (loading()) {
@@ -23,7 +24,7 @@ import {AuthService} from "../../../core/auth/auth.service";
               &nbsp;· {{ order()!.created_at | date:'medium' }}
             </p>
           </div>
-          <div class="actions" *ngIf="!isCustomer">
+          <div class="actions" *appCan="'deleteFarmData'">
             @if (canDelete()) {
               <button class="btn btn-danger" (click)="confirmDelete()">🗑️ Delete</button>
             }
@@ -31,7 +32,8 @@ import {AuthService} from "../../../core/auth/auth.service";
         </div>
 
         <!-- Status stepper -->
-        <div class="card" style="margin-bottom:20px" *ngIf="!isCustomer">
+        <div class="card" style="margin-bottom:20px">
+          @if (order()!.status === 'CANCELLED') { <div class="cancelled-notice" role="status"><strong>Order cancelled</strong><p>This order will not be fulfilled.</p></div> } @else {
           <div class="stepper">
             @for (s of allStatuses; track s) {
               <div class="step" [class.active]="order()!.status === s" [class.done]="isPast(s)">
@@ -44,11 +46,12 @@ import {AuthService} from "../../../core/auth/auth.service";
             }
           </div>
 
-          @if (nextStatuses().length > 0) {
-            <div style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap">
+          }
+          @if (!isCustomer && nextStatuses().length > 0) {
+            <div *appCan="'manageOrders'" style="display:flex;gap:8px;margin-top:16px;flex-wrap:wrap">
               <span style="font-size:0.875rem;color:var(--text-muted);align-self:center">Advance to:</span>
               @for (s of nextStatuses(); track s) {
-                <button class="btn btn-sm btn-primary" (click)="updateStatus(s)" [disabled]="updating()">
+                <button [class]="s === 'CANCELLED' ? 'btn btn-sm btn-danger' : 'btn btn-sm btn-primary'" (click)="updateStatus(s)" [disabled]="updating()">
                   → {{ s }}
                 </button>
               }
@@ -165,7 +168,7 @@ export class OrderDetailComponent implements OnInit {
 
   isPast(status: OrderStatus): boolean {
     const o = this.order();
-    if (!o) return false;
+    if (!o || o.status === 'CANCELLED') return false;
     const currentIdx = this.statusOrder.indexOf(o.status);
     const checkIdx   = this.statusOrder.indexOf(status);
     return checkIdx < currentIdx;
@@ -190,7 +193,7 @@ export class OrderDetailComponent implements OnInit {
   updateStatus(status: OrderStatus) {
     this.updating.set(true);
     this.svc.updateStatus(this.id, { status }).subscribe({
-      next:  res => { console.log(res); this.order.set(res.data); this.updating.set(false); },
+      next:  res => {  this.order.set(res.data); this.updating.set(false); },
       error: ()  => this.updating.set(false),
     });
   }

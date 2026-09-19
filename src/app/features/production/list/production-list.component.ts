@@ -1,3 +1,4 @@
+import { CanDirective } from '../../../core/auth/can.directive';
 import { Component, OnInit, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
@@ -9,7 +10,7 @@ import {PaginatedResponse} from "../../../shared/models/api.models";
 @Component({
   selector: 'app-production-list',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule],
+  imports: [CanDirective, CommonModule, RouterLink, FormsModule],
   template: `
     <div class="page">
       <div class="page-header">
@@ -76,9 +77,9 @@ import {PaginatedResponse} from "../../../shared/models/api.models";
                   </td>
                   <td>
                     <div class="actions">
-                      <a [routerLink]="b.id" class="btn btn-sm btn-secondary">View</a>
-                      <a [routerLink]="[b.id, 'edit']" class="btn btn-sm btn-ghost" title="Edit">✏️</a>
-                      <button class="btn btn-sm btn-ghost" (click)="confirmDelete(b)" title="Delete">🗑️</button>
+                      <a [routerLink]="b.id" class="quiet-link">View</a>
+                      <a [routerLink]="[b.id, 'edit']" class="icon-action" aria-label="Edit" title="Edit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m16 3 5 5-13 13H3v-5L16 3ZM13 6l5 5"/></svg></a>
+                      <button *appCan="'deleteFarmData'" class="btn btn-sm btn-ghost" (click)="confirmDelete(b)" title="Delete">🗑️</button>
                     </div>
                   </td>
                 </tr>
@@ -130,8 +131,8 @@ export class ProductionListComponent implements OnInit {
       process_type: this.typeFilter   || undefined,
     }).subscribe({
       next:  res => {
-        this.items.set((res.data as unknown as PaginatedResponse<ProductionBatch>).data);
-        this.total.set((res.data as unknown as PaginatedResponse<ProductionBatch>).total);
+        this.items.set((res.data).data);
+        this.total.set((res.data).total);
         this.loading.set(false);
       },
       error: ()  => this.loading.set(false),

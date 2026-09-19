@@ -4,7 +4,7 @@
         <h1 class="page-title">Raw Materials</h1>
         <p class="page-subtitle">{{ total() }} materials in inventory</p>
     </div>
-    <a routerLink="new" class="btn btn-primary">+ Add Material</a>
+    <a *appCan="'manageMaterials'" routerLink="new" class="btn btn-primary">+ Add Material</a>
     </div>
 
     <!-- Low stock banner -->
@@ -75,8 +75,8 @@
                 </td>
                 <td>
                 <div class="actions">
-                    <a [routerLink]="[m.id, 'edit']" class="btn btn-sm btn-ghost" title="Edit">✏️</a>
-                    <button class="btn btn-sm btn-ghost" (click)="confirmDelete(m)" title="Delete">🗑️</button>
+                    <a *appCan="'manageMaterials'" [routerLink]="[m.id, 'edit']" class="icon-action" aria-label="Edit" title="Edit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m16 3 5 5-13 13H3v-5L16 3ZM13 6l5 5"/></svg></a>
+                    <button *appCan="'deleteFarmData'" class="btn btn-sm btn-ghost" (click)="confirmDelete(m)" title="Delete">🗑️</button>
                 </div>
                 </td>
             </tr>

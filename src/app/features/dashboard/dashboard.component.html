@@ -6,15 +6,12 @@
     </div>
     </div>
 
-    @if (loading()) {
+    @if (needsFarm) {
+      <section class="card dashboard-section"><h2>{{ isWorker ? 'No farm assigned' : 'Welcome to your farm workspace' }}</h2><p>{{ isWorker ? 'Ask your farm owner to check your assignment.' : 'Add your farm in Profile to see production, inventory and orders here.' }}</p><a routerLink="/profile" class="stat-link">Open profile →</a></section>
+    } @else if (loading()) {
     <div class="empty-state"><span class="spinner" style="width:32px;height:32px"></span></div>
     } @else if (error()) {<div class="alert alert-warning" role="alert">Could not load your dashboard. <button class="btn btn-secondary" (click)="load()">Try again</button></div>} @else {
     @if (auth.isCustomer()) {
-  <div class="dashboard-actions">
-    <a routerLink="/products" class="btn btn-primary">Browse products</a>
-    <a routerLink="/orders/new" class="btn btn-secondary">Place an order</a>
-    <a routerLink="/orders" class="btn btn-secondary">My orders</a>
-  </div>
   <section class="card dashboard-section">
     <h2>My recent orders</h2>
     <p class="text-muted">Your five most recent orders. Open an order to see its items and delivery status.</p>
@@ -32,7 +29,6 @@
   <section class="card dashboard-section"><h2>Know where your food comes from</h2><p class="text-muted">Open a product to explore its origin and production details before you order.</p><a routerLink="/products" class="stat-link">Explore local food →</a></section>
 } @else {
 @if (isWorker) {
-  <div class="dashboard-actions"><a routerLink="/production" class="btn btn-primary">Open production</a><a routerLink="/raw-materials" class="btn btn-secondary">Check materials</a></div>
   <div class="stats-grid">
     <div class="stat-card"><div class="stat-value">{{ stats().activeBatches }}</div><div class="stat-label">Batches in progress</div></div>
     <div class="stat-card"><div class="stat-value">{{ plannedCount() }}</div><div class="stat-label">Planned batches</div></div>

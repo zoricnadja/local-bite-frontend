@@ -1,3 +1,4 @@
+import { CanDirective } from '../../../core/auth/can.directive';
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
@@ -8,7 +9,7 @@ import { RawMaterial } from '../../../shared/models/raw-material.models';
 @Component({
   selector: 'app-raw-materials-list',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule],
+  imports: [CanDirective, CommonModule, RouterLink, FormsModule],
   templateUrl: './raw-materials.component.html',
   styleUrls: ['./raw-materials.component.css'],
 })
@@ -33,7 +34,7 @@ export class RawMaterialsListComponent implements OnInit {
 
   ngOnInit() {
     this.load();
-    this.svc.lowStock().subscribe(items => this.lowStockCount.set(items.length));
+    this.svc.lowStock().subscribe(items => this.lowStockCount.set(items.data.length));
   }
 
   load() {
@@ -46,7 +47,7 @@ export class RawMaterialsListComponent implements OnInit {
     }).subscribe({
       next: (res) =>
       {
-        console.log(res.data)
+        
         let data = res.data.data;
         if (this.showLowOnly) data = data.filter((m: RawMaterial) => this.isLow(m));
         this.items.set(data);

@@ -25,9 +25,9 @@ export class AppComponent {
   private readonly NAV: NavItem[] = [
     { label: 'Dashboard',     icon: '📊', route: '/dashboard'     },
     { label: 'Profile',       icon: '👤', route: '/profile'       , roles: ['SystemAdmin', 'FarmOwner', 'Worker', 'Customer']},
-    { label: 'Employees',     icon: '👤', route: '/farm/workers'  , roles: ['SystemAdmin', 'FarmOwner']},
+    { label: 'Employees',     icon: '👤', route: '/farm/workers'  , roles: ['FarmOwner']},
     { label: 'Raw Materials', icon: '🌾', route: '/raw-materials' , roles: ['SystemAdmin', 'FarmOwner', 'Worker']},
-    { label: 'Production',    icon: '⚙️', route: '/production'    , roles: ['SystemAdmin', 'FarmOwner', 'Worker']},
+    { label: 'Production',    icon: '⚙️', route: '/production'    , roles: ['FarmOwner', 'Worker']},
     { label: 'Products',      icon: '📦', route: '/products'      , roles: ['SystemAdmin', 'FarmOwner', 'Worker', 'Customer']},
     { label: 'Orders',        icon: '🛒', route: '/orders'        , roles: ['SystemAdmin', 'FarmOwner', 'Worker', 'Customer']},
   ];
@@ -41,3 +41,4 @@ export class AppComponent {
 
   logout() { this.auth.logout(); }
 }
+``

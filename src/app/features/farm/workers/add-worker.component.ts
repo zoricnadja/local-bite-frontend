@@ -1,3 +1,5 @@
+import { requiredText } from '../../../shared/form-validators';
+import { FieldErrorsDirective } from '../../../shared/field-errors.directive';
 import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
@@ -9,7 +11,7 @@ import { AuthService } from '../../../core/auth/auth.service';
 @Component({
   selector: 'app-add-worker',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [FieldErrorsDirective, CommonModule, ReactiveFormsModule, RouterLink],
   templateUrl: './add-worker.component.html',
   styleUrl: 'add-worker.component.css'
 })
@@ -29,9 +31,9 @@ export class AddWorkerComponent {
     password:   ['', [Validators.required, Validators.minLength(6)]],
 
     // Required profile
-    first_name: ['', Validators.required],
-    last_name:  ['', Validators.required],
-    address:    ['', Validators.required],
+    first_name: ['', requiredText],
+    last_name:  ['', requiredText],
+    address:    ['', requiredText],
 
     // Optional profile
     phone:         [''],
@@ -40,7 +42,7 @@ export class AddWorkerComponent {
 
 
   submit(): void {
-  if (this.form.invalid) return;
+  if (this.form.invalid) { this.form.markAllAsTouched(); return; }
     this.loading.set(true);
     this.error.set('');
     const fid = this.farmId()!
@@ -57,9 +59,9 @@ export class AddWorkerComponent {
     };
     this.farmApi.addWorker(fid, req).subscribe({
       next: (res) => {
-        this.worker.set(res.data as unknown as WorkerOut);
+        this.worker.set(res.data);
         this.loading.set(false);
-        console.log(this.worker())
+        
       },
       error: (err) => {
         const msg = err?.error?.error || err?.error || 'Failed to add worker';
