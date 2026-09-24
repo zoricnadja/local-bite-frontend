@@ -16,17 +16,7 @@
 
         <div class="form-group">
             <label class="form-label">Type *</label>
-            <select class="form-control" formControlName="material_type">
-            <option value="">Select type…</option>
-            <option value="meat">Meat</option>
-            <option value="dairy">Dairy</option>
-            <option value="vegetable">Vegetable</option>
-            <option value="fruit">Fruit</option>
-            <option value="grain">Grain</option>
-            <option value="spice">Spice</option>
-            <option value="herb">Herb</option>
-            <option value="other">Other</option>
-            </select>
+            <app-type-picker endpoint="/api/raw-materials/types" [control]="form.controls.material_type" />
         </div>
 
         <div class="form-group">

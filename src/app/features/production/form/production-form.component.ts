@@ -24,28 +24,16 @@ const ALL_STATUSES: BatchStatus[] = ['PLANNED', 'IN_PROGRESS', 'COMPLETED', 'CAN
         <a routerLink="/production" class="btn btn-secondary">← Back</a>
       </div>
 
+      <p class="page-subtitle">A batch covers the full production cycle. Add phases such as curing, smoking and drying as process steps inside the batch.</p>
       <div class="card" style="max-width:640px">
         <form [formGroup]="form" (ngSubmit)="submit()">
           <div class="form-grid">
 
             <div class="form-group form-full">
               <label class="form-label">Batch Name *</label>
-              <input class="form-control" formControlName="name" placeholder="e.g. Spring Curing 2026" />
+              <input class="form-control" formControlName="name" placeholder="e.g. Sausage batch – Spring 2026" />
             </div>
 
-            <div class="form-group">
-              <label class="form-label">Process Type *</label>
-              <select class="form-control" formControlName="process_type">
-                <option value="">Select type…</option>
-                <option value="curing">Curing</option>
-                <option value="smoking">Smoking</option>
-                <option value="fermentation">Fermentation</option>
-                <option value="aging">Aging</option>
-                <option value="drying">Drying</option>
-                <option value="pressing">Pressing</option>
-                <option value="other">Other</option>
-              </select>
-            </div>
 
             @if (isEdit()) {
               <div class="form-group">
@@ -117,7 +105,6 @@ export class ProductionFormComponent implements OnInit {
 
   form = this.fb.group({
     name:         ['', requiredText],
-    process_type: ['', Validators.required],
     status:       ['PLANNED'],
     start_date:   [''],
     end_date:     [''],
@@ -142,7 +129,6 @@ export class ProductionFormComponent implements OnInit {
         const b = res.data;
         this.form.patchValue({
           name:         (b).name,
-          process_type: (b).process_type,
           status:       (b).status,
           start_date:   (b).start_date ?? '',
           end_date:     (b).end_date ?? '',
@@ -160,7 +146,6 @@ export class ProductionFormComponent implements OnInit {
     const raw = this.form.getRawValue();
     const payload = {
       name:         raw.name!,
-      process_type: raw.process_type!,
       status:       (raw.status as BatchStatus) || undefined,
       start_date:   raw.start_date || undefined,
       end_date:     raw.end_date   || undefined,

@@ -11,6 +11,8 @@ export class RawMaterialsService {
 
   constructor(private http: HttpClient) {}
 
+  listTypes() { return this.http.get<ApiResponse<string[]>>(`${this.BASE}/types`); }
+
   list(query: RawMaterialListQuery = {}): Observable<ApiResponse<PaginatedResponse<RawMaterial>>> {
     const params = this.buildParams(query as Record<string, unknown>);
     return this.http.get<ApiResponse<PaginatedResponse<MaterialWire>>>(this.BASE, { params }).pipe(map(r => ({ ...r, data: { ...r.data, data: r.data.data.map(materialFromWire) } })));

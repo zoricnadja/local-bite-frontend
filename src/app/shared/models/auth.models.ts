@@ -68,7 +68,6 @@ export interface UpdateUserRequest {
   last_name?:     string;
   address?:       string;
   phone?:         string;
-  photo_url?:     string;
   date_of_birth?: string;
 }
 

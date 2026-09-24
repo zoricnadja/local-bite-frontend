@@ -8,11 +8,7 @@
         @if (!editingUser()) {
             <div class="card-header">
                 <div class="avatar">
-                    @if (currentUser()?.photo_url) {
-                        <img [src]="currentUser()!.photo_url" alt="avatar" />
-                    } @else {
-                        <span>{{ initials() }}</span>
-                    }
+                    <span>{{ initials() }}</span>
                 </div>
                 <div>
                     <div class="full-name">{{ currentUser()?.first_name }} {{ currentUser()?.last_name }}</div>

@@ -131,7 +131,6 @@ import {Product, ProvenanceMaterial, ProvenanceResponse} from '../../../shared/m
                     <div>
                       <div class="provenance-title">Production Batch: {{ provenance()!.batch!.name }}</div>
                       <div class="provenance-detail">
-                        {{ provenance()!.batch!.process_type }} ·
                         <span [class]="'badge badge-' + provenance()!.batch!.status.toLowerCase()">{{ provenance()!.batch!.status }}</span>
                         @if (provenance()!.batch!.start_date) {
                           · {{ provenance()!.batch!.start_date }} → {{ provenance()!.batch!.end_date ?? 'ongoing' }}
@@ -164,11 +163,8 @@ import {Product, ProvenanceMaterial, ProvenanceResponse} from '../../../shared/m
                             <div class="step-item">
                               <span class="step-num">{{ s.step_order }}</span>
                               <span class="step-name">{{ s.name }}</span>
-                              @if (s.duration_hours) {
-                                <span class="step-meta">{{ s.duration_hours }}h</span>
-                              }
-                              @if (s.temperature) {
-                                <span class="step-meta">{{ s.temperature }}°C</span>
+                              @for (variable of s.variables; track $index) {
+                                <span class="step-meta">{{ variable.name }}: {{ variable.value }}</span>
                               }
                             </div>
                           }

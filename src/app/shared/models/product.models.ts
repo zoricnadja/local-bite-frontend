@@ -23,10 +23,10 @@ export interface Product {
 export interface ProvenanceStep {
   id: string;
   step_order: number;
+  status: 'PLANNED' | 'IN_PROGRESS' | 'COMPLETED';
   name: string;
   description: string | null;
-  duration_hours: number | null;
-  temperature: number | null;
+  variables: { name: string; value: string }[];
 }
 
 export interface ProvenanceMaterial {
@@ -45,7 +45,6 @@ export interface ProvenanceMaterial {
 export interface ProvenanceBatch {
   id: string;
   name: string;
-  process_type: string;
   start_date: string | null;
   end_date: string | null;
   status: string;
@@ -96,7 +95,7 @@ export interface ProductListQuery {
 export interface PublicProvenanceResponse {
   product: Pick<Product, 'name' | 'product_type' | 'description' | 'expiry_date' | 'qr_token'>;
   farm_name: string | null;
-  batch: (Pick<ProvenanceBatch, 'name' | 'process_type' | 'start_date' | 'end_date' | 'status'> & {
+  batch: (Pick<ProvenanceBatch, 'name' | 'start_date' | 'end_date' | 'status'> & {
     steps: Omit<ProvenanceStep, 'id'>[];
     raw_materials: Pick<ProvenanceMaterial, 'name' | 'material_type' | 'origin' | 'harvest_date'>[];
   }) | null;

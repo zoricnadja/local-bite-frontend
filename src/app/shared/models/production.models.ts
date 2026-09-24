@@ -4,10 +4,10 @@ export type BatchStatus = 'PLANNED' | 'IN_PROGRESS' | 'COMPLETED' | 'CANCELLED';
 export interface ProcessStep {
   id: string;
   step_order: number;
+  status: 'PLANNED' | 'IN_PROGRESS' | 'COMPLETED';
   name: string;
   description: string | null;
-  duration_hours: number | null;
-  temperature: number | null;
+  variables: StepVariable[];
 }
 
 export interface BatchRawMaterial {
@@ -27,7 +27,6 @@ export interface ProductionBatch {
   id: string;
   farm_id: string;
   name: string;
-  process_type: string;
   start_date: string | null;
   end_date: string | null;
   status: BatchStatus;
@@ -40,7 +39,6 @@ export interface ProductionBatch {
 
 export interface CreateBatchRequest {
   name: string;
-  process_type: string;
   start_date?: string;
   end_date?: string;
   notes?: string;
@@ -51,7 +49,6 @@ export interface UpdateBatchRequest {
   outputs?: ProductionOutput[];
   output_name?: string; output_type?: string; output_quantity?: number; output_unit?: string; output_expiry_date?: string;
   name?: string;
-  process_type?: string;
   start_date?: string;
   end_date?: string;
   notes?: string;
@@ -62,16 +59,15 @@ export interface CreateStepRequest {
   step_order: number;
   name: string;
   description?: string;
-  duration_hours?: number;
-  temperature?: number;
+  variables?: StepVariable[];
 }
 
 export interface UpdateStepRequest {
+  status?: 'PLANNED' | 'IN_PROGRESS' | 'COMPLETED';
   step_order?: number;
   name?: string;
   description?: string;
-  duration_hours?: number;
-  temperature?: number;
+  variables?: StepVariable[];
 }
 
 export interface AddRawMaterialRequest {
@@ -84,7 +80,6 @@ export interface BatchListQuery {
   page?: number;
   limit?: number;
   status?: BatchStatus;
-  process_type?: string;
   search?: string;
 }
 
@@ -94,3 +89,5 @@ export const BATCH_STATUS_TRANSITIONS: Record<BatchStatus, BatchStatus[]> = {
   COMPLETED:   [],
   CANCELLED:   [],
 };
+
+export interface StepVariable { name: string; value: string; }

@@ -14,6 +14,8 @@ import { RawMaterial } from '../../../shared/models/raw-material.models';
   styleUrls: ['./raw-materials.component.css'],
 })
 export class RawMaterialsListComponent implements OnInit {
+  types = signal<string[]>([]);
+  typeError = signal('');
   private svc = inject(RawMaterialsService);
 
   items        = signal<RawMaterial[]>([]);
@@ -33,6 +35,7 @@ export class RawMaterialsListComponent implements OnInit {
   isLow = (m: RawMaterial) => m.low_stock_threshold != null && +m.quantity <= +m.low_stock_threshold;
 
   ngOnInit() {
+    this.svc.listTypes().subscribe({ next: r => this.types.set(r.data), error: () => this.typeError.set('Could not load types. Reload the page to retry.') });
     this.load();
     this.svc.lowStock().subscribe(items => this.lowStockCount.set(items.data.length));
   }

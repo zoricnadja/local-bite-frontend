@@ -37,7 +37,7 @@
     @for (section of [{ title: 'In progress', items: activeBatches() }, { title: 'Planned production', items: plannedBatches() }]; track section.title) {
       <section class="card dashboard-section"><h2>{{ section.title }}</h2><p class="text-muted">Up to five batches. Open a batch to review its process and materials.</p>
         @for (batch of section.items; track batch.id) {
-          <a class="dashboard-row" [routerLink]="['/production', batch.id]"><div><strong>{{ batch.name }}</strong><div class="text-muted">{{ batch.process_type | titlecase }}</div><div class="text-muted">Start: {{ batch.start_date ? (batch.start_date | date:'mediumDate') : 'Not scheduled' }}</div></div><span>Open →</span></a>
+          <a class="dashboard-row" [routerLink]="['/production', batch.id]"><div><strong>{{ batch.name }}</strong><div class="text-muted">Start: {{ batch.start_date ? (batch.start_date | date:'mediumDate') : 'Not scheduled' }}</div></div><span>Open →</span></a>
         } @empty { <p class="empty-state">No batches {{ section.title === 'In progress' ? 'in progress' : 'planned' }}.</p> }
       </section>
     }

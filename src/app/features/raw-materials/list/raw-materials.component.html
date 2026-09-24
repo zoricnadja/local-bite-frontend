@@ -20,14 +20,9 @@
             placeholder="Search materials..." />
     <select class="form-control" style="width:auto" [(ngModel)]="typeFilter" (ngModelChange)="load()">
         <option value="">All types</option>
-        <option value="meat">Meat</option>
-        <option value="dairy">Dairy</option>
-        <option value="vegetable">Vegetable</option>
-        <option value="fruit">Fruit</option>
-        <option value="grain">Grain</option>
-        <option value="spice">Spice</option>
-        <option value="other">Other</option>
-    </select>
+          @for (type of types(); track type) { <option [value]="type">{{ type }}</option> }
+        </select>
+        @if (typeError()) { <span role="alert">{{ typeError() }}</span> }
     <label class="low-stock-toggle">
         <input type="checkbox" [(ngModel)]="showLowOnly" (ngModelChange)="load()" />
         Low stock only

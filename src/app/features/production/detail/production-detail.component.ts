@@ -25,7 +25,6 @@ import { CdkTrapFocus } from '@angular/cdk/a11y';
           <div>
             <h1 class="page-title">{{ batch()!.name }}</h1>
             <p class="page-subtitle">
-              <span class="badge badge-planned">{{ batch()!.process_type }}</span>
               &nbsp;<span [class]="statusClass(batch()!.status)">{{ batch()!.status }}</span>
             </p>
           </div>
@@ -41,11 +40,13 @@ import { CdkTrapFocus } from '@angular/cdk/a11y';
           <div class="alert alert-success" style="margin-bottom:20px;display:flex;align-items:center;gap:12px">
             <span>Advance status:</span>
             @for (s of nextStatuses(); track s) {
-              <button [class]="s === 'CANCELLED' ? 'btn btn-sm btn-danger' : 'btn btn-sm btn-primary'" (click)="advanceStatus(s)">→ {{ s }}</button>
+              <button [class]="s === 'CANCELLED' ? 'btn btn-sm btn-danger' : 'btn btn-sm btn-primary'" [disabled]="savingStatus() || (s === 'COMPLETED' && !canComplete())" (click)="advanceStatus(s)">→ {{ s }}</button>
             }
           </div>
         }
 
+        @if (batch()!.status === 'PLANNED') { <p class="text-muted">Production starts automatically when you start a process step.</p> }
+        @if (batch()!.status === 'IN_PROGRESS' && !canComplete()) { <p class="text-muted">Complete all process steps to enable production completion.</p> }
         @if (statusError()) { <div class="alert alert-danger">{{ statusError() }}</div> }
         <div class="card" style="margin-bottom:20px">
           <div class="actions"><h3>{{batch()!.status === 'COMPLETED' ? 'Final products' : 'Planned products'}}</h3>
@@ -58,7 +59,7 @@ import { CdkTrapFocus } from '@angular/cdk/a11y';
         @if(showCompletion) {
           <div class="output-backdrop"><section class="output-dialog card" role="dialog" aria-modal="true" aria-labelledby="output-title" cdkTrapFocus [cdkTrapFocusAutoCapture]="true" (keydown.escape)="!savingStatus() && (showCompletion=false)">
             <h2 id="output-title">{{completing ? 'Complete production' : 'Plan products'}}</h2>
-            <p class="text-muted">{{completing ? 'Confirm the actual products and quantities. All final products move to Storage.' : 'These products will appear in Production until the batch is completed.'}}</p>
+            <p class="text-muted">{{completing ? 'Confirm that all process steps are finished, then enter the actual products and quantities. Final products move to Storage.' : 'These products will appear in Production until the batch is completed.'}}</p>
             @if(statusError()){<div class="alert alert-danger" role="alert">{{statusError()}}</div>}
             <form #outputsForm="ngForm" (ngSubmit)="saveOutputs(outputsForm.valid === true)">
             @for(output of draftOutputs; track $index; let i=$index) {
@@ -120,6 +121,8 @@ import { CdkTrapFocus } from '@angular/cdk/a11y';
               <button *ngIf="batch()!.status !== 'COMPLETED' && batch()!.status !== 'CANCELLED'" class="icon-action" (click)="showAddStep = !showAddStep" [attr.aria-label]="showAddStep ? 'Cancel' : 'Add step'" [title]="showAddStep ? 'Cancel' : 'Add step'">@if (showAddStep) { <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M6 18 18 6"/></svg> } @else { <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg> }</button>
             </div>
 
+            <p class="text-muted">Start a step to start production. Complete every step before confirming the final products.</p>
+            @if (stepError() && !showAddStep) { <div class="alert alert-danger" role="alert">{{ stepError() }}</div> }
             @if (showAddStep) {
               <form [formGroup]="stepForm" (ngSubmit)="addStep()" class="add-form">
                 <div class="form-grid cols-3">
@@ -135,16 +138,19 @@ import { CdkTrapFocus } from '@angular/cdk/a11y';
                     <label class="form-label">Description</label>
                     <input class="form-control" formControlName="description" placeholder="Details…" />
                   </div>
-                  <div class="form-group">
-                    <label class="form-label">Duration (hours)</label>
-                    <input class="form-control" type="number" formControlName="duration_hours" min="0" step="0.5" />
-                  </div>
-                  <div class="form-group">
-                    <label class="form-label">Temperature (°C)</label>
-                    <input class="form-control" type="number" formControlName="temperature" step="0.1" />
+                  <div class="form-group form-full" formArrayName="variables">
+                    <label class="form-label">Step variables</label>
+                    @for (variable of stepForm.controls.variables.controls; track variable; let i = $index) {
+                      <div class="form-grid" [formGroupName]="i">
+                        <label class="form-group">Variable name<input class="form-control" formControlName="name" maxlength="100" placeholder="e.g. Temperature" /></label>
+                        <label class="form-group">Variable value<input class="form-control" formControlName="value" maxlength="1000" placeholder="e.g. 18 °C" /></label>
+                        <button type="button" class="btn btn-secondary btn-sm" (click)="stepForm.controls.variables.removeAt(i)">Remove variable</button>
+                      </div>
+                    }
+                    <button type="button" class="btn btn-secondary btn-sm" (click)="addVariable()" [disabled]="stepForm.controls.variables.length >= 50">Add variable</button>
                   </div>
                 </div>
-                <button class="icon-action" type="submit" [disabled]="false" style="margin-top:10px" aria-label="Add Step" title="Add Step"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+                <button class="btn btn-primary" type="submit" [disabled]="false" style="margin-top:10px" aria-label="Add Step" title="Add Step">Save step</button>
               </form>
               @if (stepError()) {
                 <div class="alert alert-danger" style="margin-top:16px">{{ stepError() }}</div>
@@ -159,16 +165,23 @@ import { CdkTrapFocus } from '@angular/cdk/a11y';
                   <div class="timeline-item">
                     <div class="timeline-num">{{ s.step_order }}</div>
                     <div class="timeline-content">
-                      <div class="timeline-title">{{ s.name }}</div>
+                      <div class="timeline-title">{{ s.name }} <span class="step-status" [class.active]="s.status === 'IN_PROGRESS'" [class.done]="s.status === 'COMPLETED'">{{ s.status === 'PLANNED' ? 'Planned' : s.status === 'IN_PROGRESS' ? 'In progress' : 'Completed' }}</span></div>
                       @if (s.description) {
                         <div class="timeline-desc">{{ s.description }}</div>
                       }
                       <div class="timeline-meta">
-                        @if (s.duration_hours) { <span>⏱ {{ s.duration_hours }}h</span> }
-                        @if (s.temperature) { <span>🌡 {{ s.temperature }}°C</span> }
+                        @for (variable of s.variables; track $index) { <span>{{ variable.name }}: {{ variable.value }}</span> }
                       </div>
                     </div>
-                    <button class="icon-action" [disabled]="batch()!.status === 'COMPLETED' || batch()!.status === 'CANCELLED'" (click)="deleteStep(s)" title="Delete step" aria-label="Delete step"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/></svg></button>
+                    <div class="step-actions">
+                      @if (batch()!.status !== 'COMPLETED' && batch()!.status !== 'CANCELLED' && s.status !== 'COMPLETED') {
+                        <button type="button" class="step-action" [class.finish]="s.status === 'IN_PROGRESS'" [disabled]="stepSaving()" (click)="advanceStep(s)" [attr.aria-label]="(s.status === 'PLANNED' ? 'Start step: ' : 'Complete step: ') + s.name">
+                          <svg viewBox="0 0 24 24" aria-hidden="true">@if (s.status === 'PLANNED') { <path d="m9 5 10 7-10 7Z"/> } @else { <path d="m5 12 4 4L19 6"/> }</svg>
+                          {{ s.status === 'PLANNED' ? 'Start' : 'Complete' }}
+                        </button>
+                      }
+                      <button class="icon-action" [disabled]="stepSaving() || batch()!.status === 'COMPLETED' || batch()!.status === 'CANCELLED'" (click)="deleteStep(s)" title="Delete step" aria-label="Delete step"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/></svg></button>
+                    </div>
                   </div>
                 }
               </div>
@@ -269,10 +282,22 @@ import { CdkTrapFocus } from '@angular/cdk/a11y';
     .timeline-item { display: flex; align-items: flex-start; gap: 14px; padding: 12px 0; border-bottom: 1px solid var(--border); }
     .timeline-item:last-child { border-bottom: none; }
     .timeline-num { width: 28px; height: 28px; border-radius: 50%; background: var(--accent); color: white; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700; flex-shrink: 0; }
-    .timeline-content { flex: 1; }
-    .timeline-title { font-weight: 700; font-size: 0.9rem; }
+    .timeline-content { flex: 1; min-width:0; }
+    .timeline-title { display:flex; align-items:center; flex-wrap:wrap; gap:8px; font-weight:700; font-size:0.9rem; overflow-wrap:anywhere; }
     .timeline-desc { font-size: 0.82rem; color: var(--text-secondary); margin-top: 2px; }
-    .timeline-meta { display: flex; gap: 12px; margin-top: 4px; font-size: 0.8rem; color: var(--text-muted); }
+    .timeline-meta { display:flex; flex-wrap:wrap; gap:12px; margin-top:4px; font-size:0.8rem; color:var(--text-muted); overflow-wrap:anywhere; }
+    .step-status { display:inline-flex; align-items:center; gap:5px; font-size:.72rem; font-weight:500; color:var(--text-muted); white-space:nowrap; }
+    .step-status:before { content:''; width:6px; height:6px; border-radius:50%; background:currentColor; }
+    .step-status.active { color:#9a6700; }
+    .step-status.done { color:#267044; }
+    .step-actions { display:flex; align-items:center; gap:8px; }
+    .step-action { display:inline-flex; align-items:center; justify-content:center; gap:6px; min-height:36px; padding:6px 12px; border:1px solid var(--border); border-radius:8px; background:var(--surface); color:var(--text-secondary); font:inherit; font-size:.8rem; font-weight:600; cursor:pointer; transition:background .15s,border-color .15s; }
+    .step-action.finish { color:#267044; background:#f0f8f2; border-color:#cce1d2; }
+    .step-action:hover:not(:disabled) { background:#e6f1e9; border-color:#a2c7ae; }
+    .step-action:focus-visible { outline:2px solid var(--accent); outline-offset:3px; }
+    .step-action:disabled { opacity:.5; cursor:wait; }
+    .step-action svg { width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+    @media(max-width:600px) { .timeline-item { flex-wrap:wrap; gap:10px; } .step-actions { width:100%; justify-content:flex-end; } }
   `]
 })
 export class ProductionDetailComponent implements OnInit {
@@ -286,6 +311,7 @@ export class ProductionDetailComponent implements OnInit {
   loading            = signal(true);
   availableMaterials = signal<RawMaterial[]>([]);
   stepError   = signal('');
+  stepSaving = signal(false);
   materialError   = signal('');
   showAddStep        = false;
   showAddMaterial    = false;
@@ -313,16 +339,30 @@ export class ProductionDetailComponent implements OnInit {
   nextStatuses = () => {
     const b = this.batch();
     if (!b) return [];
-    return BATCH_STATUS_TRANSITIONS[b.status as BatchStatus] ?? [];
+    return (BATCH_STATUS_TRANSITIONS[b.status as BatchStatus] ?? []).filter(status => status !== 'IN_PROGRESS');
   };
+
+  canComplete = () => !!this.batch()?.steps.length && this.batch()!.steps.every(step => step.status === 'COMPLETED');
+
+  advanceStep(step: ProcessStep) {
+    if (this.stepSaving()) return;
+    this.stepSaving.set(true);
+    this.stepError.set('');
+    this.svc.updateStep(this.id, step.id, { status: step.status === 'PLANNED' ? 'IN_PROGRESS' : 'COMPLETED' }).subscribe({
+      next: () => { this.stepSaving.set(false); this.load(); },
+      error: e => { this.stepSaving.set(false); this.stepError.set(e.error?.error ?? 'Could not update step status'); },
+    });
+  }
 
   stepForm = this.fb.group({
     step_order:     [1, [Validators.required, Validators.min(1)]],
     name:           ['', requiredText],
     description:    [''],
-    duration_hours: [null as number | null],
-    temperature:    [null as number | null],
+    variables: this.fb.array<ReturnType<ProductionDetailComponent['newVariable']>>([]),
   });
+
+  newVariable() { return this.fb.group({ name: ['', [requiredText, Validators.maxLength(100)]], value: ['', [requiredText, Validators.maxLength(1000)]] }); }
+  addVariable() { this.stepForm.controls.variables.push(this.newVariable()); }
 
   materialForm = this.fb.group({
     raw_material_id: ['', Validators.required],
@@ -342,6 +382,7 @@ export class ProductionDetailComponent implements OnInit {
     this.svc.getBatch(this.id).subscribe({
       next:  res => {
         this.batch.set(res.data);
+        this.stepForm.controls.step_order.setValue(Math.max(0, ...res.data.steps.map(s => s.step_order)) + 1);
         this.loading.set(false);
       },
       error: ()  => this.loading.set(false),
@@ -363,11 +404,11 @@ export class ProductionDetailComponent implements OnInit {
       step_order:     raw.step_order!,
       name:           raw.name!,
       description:    raw.description || undefined,
-      duration_hours: raw.duration_hours ?? undefined,
-      temperature:    raw.temperature   ?? undefined,
+      variables: raw.variables.map(v => ({ name: v.name!.trim(), value: v.value!.trim() })),
     }).subscribe({
       next: ()=> {
-        this.stepForm.reset({step_order: 1});
+        this.stepForm.controls.variables.clear();
+        this.stepForm.reset({step_order: Math.max(0, ...this.batch()!.steps.map(s => s.step_order), raw.step_order!) + 1});
         this.showAddStep = false;
         this.load();
       },

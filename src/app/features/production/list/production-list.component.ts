@@ -31,15 +31,6 @@ import {PaginatedResponse} from "../../../shared/models/api.models";
           <option value="COMPLETED">Completed</option>
           <option value="CANCELLED">Cancelled</option>
         </select>
-        <select class="form-control" style="width:auto" [(ngModel)]="typeFilter" (ngModelChange)="load()">
-          <option value="">All types</option>
-          <option value="curing">Curing</option>
-          <option value="smoking">Smoking</option>
-          <option value="fermentation">Fermentation</option>
-          <option value="aging">Aging</option>
-          <option value="drying">Drying</option>
-          <option value="other">Other</option>
-        </select>
       </div>
 
       @if (loading()) {
@@ -56,7 +47,6 @@ import {PaginatedResponse} from "../../../shared/models/api.models";
             <thead>
               <tr>
                 <th>Name</th>
-                <th>Type</th>
                 <th>Status</th>
                 <th>Start</th>
                 <th>End</th>
@@ -70,7 +60,6 @@ import {PaginatedResponse} from "../../../shared/models/api.models";
                     (keydown.enter)="$event.target === $event.currentTarget && detailLink.click()"
                     [attr.aria-label]="'Open batch ' + b.name">
                   <td><strong>{{ b.name }}</strong></td>
-                  <td><span class="badge badge-planned">{{ b.process_type }}</span></td>
                   <td><span [class]="statusClass(b.status)">{{ b.status }}</span></td>
                   <td class="text-muted text-sm">{{ b.start_date ?? '—' }}</td>
                   <td class="text-muted text-sm">{{ b.end_date ?? '—' }}</td>
@@ -115,7 +104,6 @@ export class ProductionListComponent implements OnInit {
 
   search       = '';
   statusFilter = '';
-  typeFilter   = '';
 
   private searchTimer: any;
   totalPages = () => Math.ceil(this.total() / this.pageSize);
@@ -129,7 +117,6 @@ export class ProductionListComponent implements OnInit {
       limit:        this.pageSize,
       search:       this.search       || undefined,
       status:       (this.statusFilter || undefined) as BatchStatus | undefined,
-      process_type: this.typeFilter   || undefined,
     }).subscribe({
       next:  res => {
         this.items.set((res.data).data);

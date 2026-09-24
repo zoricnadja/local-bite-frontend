@@ -1,3 +1,4 @@
+import { TypePickerComponent } from '../../../shared/type-picker.component';
 import { dateOrder } from '../../../shared/form-validators';
 import { requiredText } from '../../../shared/form-validators';
 import { FieldErrorsDirective } from '../../../shared/field-errors.directive';
@@ -11,7 +12,7 @@ import {RawMaterial, RawMaterialRequest} from '../../../shared/models/raw-materi
 @Component({
   selector: 'app-raw-material-form',
   standalone: true,
-  imports: [FieldErrorsDirective, ReactiveFormsModule, RouterLink],
+  imports: [TypePickerComponent, FieldErrorsDirective, ReactiveFormsModule, RouterLink],
   templateUrl: './raw-material-form.component.html',
 })
 export class RawMaterialFormComponent implements OnInit {

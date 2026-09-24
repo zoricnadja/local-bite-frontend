@@ -22,7 +22,7 @@ import { retry, timer, throwError } from 'rxjs';
           <div class="origin"><span>Product expiry date</span><strong>{{ data.product.expiry_date ? (data.product.expiry_date | date:'longDate') : 'Not recorded' }}</strong></div>
           @if (data.batch) {
             <h2>Production journey</h2>
-            <div class="origin"><span>Production batch</span><strong>{{ data.batch.name }} · {{ data.batch.process_type }}</strong></div>
+            <div class="origin"><span>Production batch</span><strong>{{ data.batch.name }}</strong></div>
             <div class="dates"><div class="origin"><span>Production start</span><strong>{{ data.batch.start_date ? (data.batch.start_date | date:'longDate') : 'Not recorded' }}</strong></div><div class="origin"><span>Production end</span><strong>{{ data.batch.end_date ? (data.batch.end_date | date:'longDate') : 'Not recorded' }}</strong></div></div>
             <p class="status" [class.cancelled]="data.batch.status === 'CANCELLED'">{{ data.batch.status.replace('_', ' ') | titlecase }}</p>
             <h2>Raw materials used</h2>
