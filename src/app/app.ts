@@ -24,12 +24,12 @@ export class AppComponent {
 
   private readonly NAV: NavItem[] = [
     { label: 'Dashboard',     icon: '📊', route: '/dashboard'     },
-    { label: 'Profile',       icon: '👤', route: '/profile'       , roles: ['SystemAdmin', 'FarmOwner', 'Worker', 'Customer']},
-    { label: 'Employees',     icon: '👤', route: '/farm/workers'  , roles: ['FarmOwner']},
-    { label: 'Raw Materials', icon: '🌾', route: '/raw-materials' , roles: ['SystemAdmin', 'FarmOwner', 'Worker']},
-    { label: 'Production',    icon: '⚙️', route: '/production'    , roles: ['FarmOwner', 'Worker']},
-    { label: 'Products',      icon: '📦', route: '/products'      , roles: ['SystemAdmin', 'FarmOwner', 'Worker', 'Customer']},
-    { label: 'Orders',        icon: '🛒', route: '/orders'        , roles: ['SystemAdmin', 'FarmOwner', 'Worker', 'Customer']},
+    { label: 'Profile',       icon: '👤', route: '/profile'       , roles: ['SystemAdmin', 'BusinessOwner', 'Worker', 'Customer']},
+    { label: 'Employees',     icon: '👤', route: '/business/workers'  , roles: ['BusinessOwner']},
+    { label: 'Raw Materials', icon: '🌾', route: '/raw-materials' , roles: ['SystemAdmin', 'BusinessOwner', 'Worker']},
+    { label: 'Production',    icon: '⚙️', route: '/production'    , roles: ['BusinessOwner', 'Worker']},
+    { label: 'Products',      icon: '📦', route: '/products'      , roles: ['SystemAdmin', 'BusinessOwner', 'Worker', 'Customer']},
+    { label: 'Orders',        icon: '🛒', route: '/orders'        , roles: ['SystemAdmin', 'BusinessOwner', 'Worker', 'Customer']},
   ];
 
   readonly visibleNav = computed(() => {

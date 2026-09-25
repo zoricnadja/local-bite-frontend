@@ -16,9 +16,9 @@ export class ProductService {
     return this.http.get<ApiResponse<PaginatedResponse<ProductWire>>>(this.BASE, { params }).pipe(map(r => ({ ...r, data: { ...r.data, data: r.data.data.map(productFromWire) } })));
   }
 
-  listByFarm(query: ProductListQuery = {}): Observable<ApiResponse<PaginatedResponse<Product>>> {
+  listByBusiness(query: ProductListQuery = {}): Observable<ApiResponse<PaginatedResponse<Product>>> {
     const params = this.buildParams(query as Record<string, unknown>);
-    return this.http.get<ApiResponse<PaginatedResponse<ProductWire>>>(`${this.BASE}/farm`, { params }).pipe(map(r => ({ ...r, data: { ...r.data, data: r.data.data.map(productFromWire) } })));
+    return this.http.get<ApiResponse<PaginatedResponse<ProductWire>>>(`${this.BASE}/business`, { params }).pipe(map(r => ({ ...r, data: { ...r.data, data: r.data.data.map(productFromWire) } })));
   }
 
   getById(id: string): Observable<ApiResponse<Product>> {

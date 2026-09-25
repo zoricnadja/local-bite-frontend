@@ -32,7 +32,7 @@ import {Product, ProvenanceMaterial, ProvenanceResponse} from '../../../shared/m
             @if(product()!.status !== 'PRODUCTION'){<button *appCan="'manageProducts'" class="btn btn-secondary" [disabled]="moving()" (click)="move()">Move to {{product()!.status === 'ON_SALE' ? 'Storage' : 'On sale'}}</button>}
             @else {<a [routerLink]="['/production',product()!.batch_id]" class="icon-action" aria-label="Edit in production" title="Edit in production"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m16 3 5 5-13 13H3v-5L16 3ZM13 6l5 5"/></svg></a>}
             <a *appCan="'manageProducts'" [routerLink]="product()!.status === 'PRODUCTION' ? ['/production',product()!.batch_id] : ['/products', product()!.id, 'edit']" class="icon-action" aria-label="Edit" title="Edit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m16 3 5 5-13 13H3v-5L16 3ZM13 6l5 5"/></svg></a>
-            <button *appCan="'deleteFarmData'" class="icon-action" [disabled]="product()!.status === 'PRODUCTION'" (click)="confirmDelete()" aria-label="Delete" title="Delete"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/></svg></button>
+            <button *appCan="'deleteBusinessData'" class="icon-action" [disabled]="product()!.status === 'PRODUCTION'" (click)="confirmDelete()" aria-label="Delete" title="Delete"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/></svg></button>
           </div>
         </div>
 
@@ -69,7 +69,7 @@ import {Product, ProvenanceMaterial, ProvenanceResponse} from '../../../shared/m
               <div style="margin-top:12px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
                 <a [routerLink]="['/trace', product()!.qr_token]" class="btn btn-sm btn-secondary">Open traceability</a>
                 <a [authenticatedMedia]="qrUrl()" download class="btn btn-sm btn-secondary">⬇ Download</a>
-                <button *appCan="'deleteFarmData'" class="btn btn-sm btn-ghost" (click)="regenerateQr()">🔄 Regenerate</button>
+                <button *appCan="'deleteBusinessData'" class="btn btn-sm btn-ghost" (click)="regenerateQr()">🔄 Regenerate</button>
               </div>
             </div>
           </div>
@@ -115,12 +115,12 @@ import {Product, ProvenanceMaterial, ProvenanceResponse} from '../../../shared/m
               <div class="card" style="margin-top:16px">
                 <h3 style="margin-bottom:16px">🌿 Provenance Chain</h3><div class="provenance-step"><div><div class="provenance-title">Product expiry</div><div>{{ product()!.expiry_date ? (product()!.expiry_date | date:'mediumDate') : 'Not recorded' }}</div></div></div>
 
-                @if (provenance()!.farm_name) {
+                @if (provenance()!.business_name) {
                   <div class="provenance-step">
                     <div class="provenance-icon">🏡</div>
                     <div>
-                      <div class="provenance-title">Farm</div>
-                      <div class="provenance-detail">{{ provenance()!.farm_name }}</div>
+                      <div class="provenance-title">Business</div>
+                      <div class="provenance-detail">{{ provenance()!.business_name }}</div>
                     </div>
                   </div>
                 }

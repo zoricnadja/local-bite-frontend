@@ -12,7 +12,7 @@ describe('Production step workflow', () => {
   let component: ProductionDetailComponent;
   const service = { updateStep: vi.fn() };
   const batch = (statuses: ProcessStep['status'][]): ProductionBatch => ({
-    id: 'batch', farm_id: 'farm', name: 'Batch', status: 'IN_PROGRESS',
+    id: 'batch', business_id: 'business', name: 'Batch', status: 'IN_PROGRESS',
     start_date: null, end_date: null, notes: null, created_at: '', updated_at: '',
     outputs: [], raw_materials: [],
     steps: statuses.map((status, i) => ({ id: `${i}`, step_order: i + 1, status, name: `Step ${i}`, description: null, variables: [] })),

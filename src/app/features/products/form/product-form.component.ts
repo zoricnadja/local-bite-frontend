@@ -1,3 +1,4 @@
+import { productTypeOptions } from '../../../shared/models/product-types';
 import { requiredText } from '../../../shared/form-validators';
 import { FieldErrorsDirective } from '../../../shared/field-errors.directive';
 import { Component, OnInit, signal, inject } from '@angular/core';
@@ -34,14 +35,9 @@ import { ProductService } from '../../../core/services/product.service';
               <label class="form-label">Type *</label>
               <select class="form-control" formControlName="product_type">
                 <option value="">Select type…</option>
-                <option value="meat">Meat</option>
-                <option value="dairy">Dairy</option>
-                <option value="vegetable">Vegetable</option>
-                <option value="fruit">Fruit</option>
-                <option value="cheese">Cheese</option>
-                <option value="sausage">Sausage</option>
-                <option value="honey">Honey</option>
-                <option value="other">Other</option>
+                @for (type of productTypeOptions(form.controls.product_type.value); track type.value) {
+                  <option [value]="type.value">{{ type.label }}</option>
+                }
               </select>
             </div>
 
@@ -95,6 +91,7 @@ import { ProductService } from '../../../core/services/product.service';
   `
 })
 export class ProductFormComponent implements OnInit {
+  readonly productTypeOptions = productTypeOptions;
   private production = inject(ProductionService);
   batches = signal<ProductionBatch[]>([]);
   private svc    = inject(ProductService);

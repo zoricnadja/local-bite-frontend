@@ -2,7 +2,7 @@ export type ProductStatus = 'PRODUCTION' | 'STORAGE' | 'ON_SALE';
 export interface Product {
   status: ProductStatus;
   id: string;
-  farm_id: string;
+  business_id: string;
   name: string;
   product_type: string;
   description: string | null;
@@ -54,7 +54,7 @@ export interface ProvenanceBatch {
 
 export interface ProvenanceResponse {
   product: Product;
-  farm_name: string | null;
+  business_name: string | null;
   batch: ProvenanceBatch | null;
 }
 
@@ -84,7 +84,7 @@ export interface UpdateProductRequest {
 
 export interface ProductListQuery {
   status?: ProductStatus;
-  is_active?: boolean; farm_id?: string;
+  is_active?: boolean; business_id?: string;
   page?: number;
   limit?: number;
   product_type?: string;
@@ -94,7 +94,7 @@ export interface ProductListQuery {
 
 export interface PublicProvenanceResponse {
   product: Pick<Product, 'name' | 'product_type' | 'description' | 'expiry_date' | 'qr_token'>;
-  farm_name: string | null;
+  business_name: string | null;
   batch: (Pick<ProvenanceBatch, 'name' | 'start_date' | 'end_date' | 'status'> & {
     steps: Omit<ProvenanceStep, 'id'>[];
     raw_materials: Pick<ProvenanceMaterial, 'name' | 'material_type' | 'origin' | 'harvest_date'>[];

@@ -11,14 +11,14 @@ import { retry, timer, throwError } from 'rxjs';
   template: `
     <main class="trace-page">
       <section class="trace-card">
-        <p class="eyebrow">LOCAL BITE · FROM FARM TO TABLE</p>
+        <p class="eyebrow">LOCAL BITE · DISCOVER PRODUCT ORIGINS</p>
         @if (loading()) { <p>Loading product traceability…</p> }
         @else if (error()) { <h1>Traceability unavailable</h1><p>{{ error() }}</p><button class="btn" (click)="load()">Try again</button> }
         @else if (trace(); as data) {
           <h1>{{ data.product.name }}</h1>
           <p class="type">{{ data.product.product_type }}</p>
           @if (data.product.description) { <p>{{ data.product.description }}</p> }
-          <div class="origin"><span>Producer</span><strong>{{ data.farm_name ?? 'Information unavailable' }}</strong></div>
+          <div class="origin"><span>Producer</span><strong>{{ data.business_name ?? 'Information unavailable' }}</strong></div>
           <div class="origin"><span>Product expiry date</span><strong>{{ data.product.expiry_date ? (data.product.expiry_date | date:'longDate') : 'Not recorded' }}</strong></div>
           @if (data.batch) {
             <h2>Production journey</h2>

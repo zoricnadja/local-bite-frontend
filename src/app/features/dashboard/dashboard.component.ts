@@ -40,7 +40,7 @@ export class DashboardComponent implements OnInit {
   private requesting = false;
   get isWorker() { return this.auth.role() === 'Worker'; }
   get lowStockNames() { return this.lowStockItems().slice(0, 3).map(m => m.name).join(', '); }
-  get needsFarm() { return ['Worker','FarmOwner'].includes(this.auth.role() ?? '') && !this.auth.farmId(); }
+  get needsBusiness() { return ['Worker','BusinessOwner'].includes(this.auth.role() ?? '') && !this.auth.businessId(); }
 
   ngOnInit() {
     this.load();
@@ -48,7 +48,7 @@ export class DashboardComponent implements OnInit {
   }
 
   load(showLoading = true) {
-    if (this.needsFarm) { this.loading.set(false); return; }
+    if (this.needsBusiness) { this.loading.set(false); return; }
     if (this.requesting) return;
     this.requesting = true;
     if (showLoading) this.loading.set(true);

@@ -4,15 +4,15 @@ import { AuthService } from './auth.service';
 
 export const PERMISSIONS = {
   shop: ['Customer'],
-  manageProducts: ['FarmOwner', 'Worker'],
-  manageProduction: ['FarmOwner', 'Worker'],
-  manageMaterials: ['FarmOwner', 'Worker'],
-  deleteFarmData: ['FarmOwner'],
-  analytics: ['FarmOwner', 'SystemAdmin'],
-  manageOrders: ['FarmOwner', 'Worker'],
-  manageFarm: ['FarmOwner'],
-  viewFarm: ['FarmOwner', 'Worker'],
-  viewMaterials: ['FarmOwner', 'Worker', 'SystemAdmin'],
+  manageProducts: ['BusinessOwner', 'Worker'],
+  manageProduction: ['BusinessOwner', 'Worker'],
+  manageMaterials: ['BusinessOwner', 'Worker'],
+  deleteBusinessData: ['BusinessOwner'],
+  analytics: ['BusinessOwner', 'SystemAdmin'],
+  manageOrders: ['BusinessOwner', 'Worker'],
+  manageBusiness: ['BusinessOwner'],
+  viewBusiness: ['BusinessOwner', 'Worker'],
+  viewMaterials: ['BusinessOwner', 'Worker', 'SystemAdmin'],
 } as const;
 export type Permission = keyof typeof PERMISSIONS;
 export function hasPermission(role: string | null, permission: Permission): boolean {

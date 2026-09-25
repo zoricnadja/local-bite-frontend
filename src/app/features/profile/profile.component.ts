@@ -6,9 +6,9 @@ import { CommonModule, DatePipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthService } from '../../core/auth/auth.service';
-import {Farm, UpdateUserRequest, UpdateFarmRequest} from '../../shared/models/auth.models';
+import {Business, UpdateUserRequest, UpdateBusinessRequest} from '../../shared/models/auth.models';
 import {UserService} from "../../core/services/users.service";
-import {FarmService} from "../../core/services/farm.service";
+import {BusinessService} from "../../core/services/business.service";
 
 @Component({
   selector: 'app-profile',
@@ -20,30 +20,30 @@ import {FarmService} from "../../core/services/farm.service";
 export class ProfileComponent {
   private auth    = inject(AuthService);
   private userSvc = inject(UserService);
-  private farmSvc = inject(FarmService);
+  private businessSvc = inject(BusinessService);
   private fb      = inject(FormBuilder);
 
   // ── State ──────────────────────────────────────────────────────────────────
   readonly currentUser = this.auth.currentUser;
-  farmId      = this.auth.farmId;
+  businessId      = this.auth.businessId;
 
-  farm         = signal<Farm | null>(null);
-  farmLoading  = signal(false);
-  farmError    = signal<string | null>(null);
+  business         = signal<Business | null>(null);
+  businessLoading  = signal(false);
+  businessError    = signal<string | null>(null);
 
   // edit modes
   editingUser  = signal(false);
-  editingFarm  = signal(false);
+  editingBusiness  = signal(false);
 
   // async feedback
   userSaving   = signal(false);
   userError    = signal<string | null>(null);
-  farmSaving   = signal(false);
-  farmSaveError = signal<string | null>(null);
+  businessSaving   = signal(false);
+  businessSaveError = signal<string | null>(null);
 
   // delete confirm
   confirmDeleteUser = signal(false);
-  confirmDeleteFarm = signal(false);
+  confirmDeleteBusiness = signal(false);
   deleting          = signal(false);
   deleteError       = signal<string | null>(null);
 
@@ -57,7 +57,7 @@ export class ProfileComponent {
     date_of_birth: [''],
   });
 
-  farmForm = this.fb.group({
+  businessForm = this.fb.group({
     name:        ['', requiredText],
     address:     ['', requiredText],
     phone:       [''],
@@ -72,15 +72,15 @@ export class ProfileComponent {
     return `${u.first_name[0]}${u.last_name[0]}`.toUpperCase();
   });
 
-  // ── Load farm when farmId changes ──────────────────────────────────────────
-  private _farmEffect = effect(() => {
-    const id = this.farmId();
-    this.farmError.set(null);
-    if (this.auth.isCustomer() || !id) { this.farm.set(null); return; }
-    this.farmLoading.set(true);
-    this.farmSvc.getById(id).subscribe({
-      next:  f  => { this.farm.set(f.data); this.farmLoading.set(false); },
-      error: err => { this.farmError.set(err?.error?.error ?? 'Failed to load farm'); this.farmLoading.set(false); },
+  // ── Load business when businessId changes ──────────────────────────────────────────
+  private _businessEffect = effect(() => {
+    const id = this.businessId();
+    this.businessError.set(null);
+    if (this.auth.isCustomer() || !id) { this.business.set(null); return; }
+    this.businessLoading.set(true);
+    this.businessSvc.getById(id).subscribe({
+      next:  f  => { this.business.set(f.data); this.businessLoading.set(false); },
+      error: err => { this.businessError.set(err?.error?.error ?? 'Failed to load business'); this.businessLoading.set(false); },
     });
   });
 
@@ -131,29 +131,29 @@ export class ProfileComponent {
     });
   }
 
-  // ── Farm edit ──────────────────────────────────────────────────────────────
-  startEditFarm() {
-    const f = this.farm()!;
-    this.farmForm.setValue({
+  // ── Business edit ──────────────────────────────────────────────────────────────
+  startEditBusiness() {
+    const f = this.business()!;
+    this.businessForm.setValue({
       name:        f.name,
       address:     f.address,
       phone:       f.phone       ?? '',
       description: f.description ?? '',
       website:     f.website     ?? '',
     });
-    this.farmSaveError.set(null);
-    this.editingFarm.set(true);
+    this.businessSaveError.set(null);
+    this.editingBusiness.set(true);
   }
 
-  cancelEditFarm() { this.editingFarm.set(false); }
+  cancelEditBusiness() { this.editingBusiness.set(false); }
 
-  saveFarm() {
-    if (this.farmForm.invalid) { this.farmForm.markAllAsTouched(); return; }
-    this.farmSaving.set(true);
-    this.farmSaveError.set(null);
+  saveBusiness() {
+    if (this.businessForm.invalid) { this.businessForm.markAllAsTouched(); return; }
+    this.businessSaving.set(true);
+    this.businessSaveError.set(null);
 
-    const v = this.farmForm.getRawValue();
-    const req: UpdateFarmRequest = {
+    const v = this.businessForm.getRawValue();
+    const req: UpdateBusinessRequest = {
       name:        v.name!,
       address:     v.address!,
       phone:       v.phone       || undefined,
@@ -161,15 +161,15 @@ export class ProfileComponent {
       website:     v.website     || undefined,
     };
 
-    this.farmSvc.update(this.farmId()!, req).subscribe({
+    this.businessSvc.update(this.businessId()!, req).subscribe({
       next: updated => {
-        this.farm.set(updated.data);
-        this.editingFarm.set(false);
-        this.farmSaving.set(false);
+        this.business.set(updated.data);
+        this.editingBusiness.set(false);
+        this.businessSaving.set(false);
       },
       error: err => {
-        this.farmSaveError.set(err?.error?.error ?? 'Failed to save farm');
-        this.farmSaving.set(false);
+        this.businessSaveError.set(err?.error?.error ?? 'Failed to save business');
+        this.businessSaving.set(false);
       },
     });
   }
@@ -188,22 +188,22 @@ export class ProfileComponent {
     });
   }
 
-  // ── Delete farm ────────────────────────────────────────────────────────────
-  deleteFarm() {
+  // ── Delete business ────────────────────────────────────────────────────────────
+  deleteBusiness() {
     this.deleting.set(true);
     this.deleteError.set(null);
-    this.farmSvc.delete(this.farmId()!).subscribe({
+    this.businessSvc.delete(this.businessId()!).subscribe({
       next: () => {
-        this.farm.set(null);
-        // this.auth.farmId.set(null);
-        this.confirmDeleteFarm.set(false);
+        this.business.set(null);
+        // this.auth.businessId.set(null);
+        this.confirmDeleteBusiness.set(false);
         this.deleting.set(false);
-        this.auth.refreshUser().subscribe(); // re-sync token/user (farm_id cleared)
+        this.auth.refreshUser().subscribe(); // re-sync token/user (business_id cleared)
       },
       error: err => {
-        this.deleteError.set(err?.error?.error ?? 'Failed to delete farm');
+        this.deleteError.set(err?.error?.error ?? 'Failed to delete business');
         this.deleting.set(false);
-        this.confirmDeleteFarm.set(false);
+        this.confirmDeleteBusiness.set(false);
       },
     });
   }

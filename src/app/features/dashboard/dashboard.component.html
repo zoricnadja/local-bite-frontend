@@ -1,13 +1,13 @@
 <div class="page">
     <div class="page-header">
     <div>
-        <h1 class="page-title">{{ auth.isCustomer() ? 'Your local food corner' : isWorker ? 'Your work overview' : 'Farm overview' }}</h1>
-        <p class="page-subtitle">{{ auth.isCustomer() ? 'Browse local products and follow your orders.' : isWorker ? 'Keep production moving and check materials that need attention.' : 'Here is what is happening on your farm.' }}</p>
+        <h1 class="page-title">{{ auth.isCustomer() ? 'Your local product corner' : isWorker ? 'Your work overview' : 'Business overview' }}</h1>
+        <p class="page-subtitle">{{ auth.isCustomer() ? 'Browse local products and follow your orders.' : isWorker ? 'Keep production moving and check materials that need attention.' : 'Here is what is happening with your business.' }}</p>
     </div>
     </div>
 
-    @if (needsFarm) {
-      <section class="card dashboard-section"><h2>{{ isWorker ? 'No farm assigned' : 'Welcome to your farm workspace' }}</h2><p>{{ isWorker ? 'Ask your farm owner to check your assignment.' : 'Add your farm in Profile to see production, inventory and orders here.' }}</p><a routerLink="/profile" class="stat-link">Open profile →</a></section>
+    @if (needsBusiness) {
+      <section class="card dashboard-section"><h2>{{ isWorker ? 'No business assigned' : 'Welcome to your business workspace' }}</h2><p>{{ isWorker ? 'Ask your business owner to check your assignment.' : 'Add your business in Profile to see production, inventory and orders here.' }}</p><a routerLink="/profile" class="stat-link">Open profile →</a></section>
     } @else if (loading()) {
     <div class="empty-state"><span class="spinner" style="width:32px;height:32px"></span></div>
     } @else if (error()) {<div class="alert alert-warning" role="alert">Could not load your dashboard. <button class="btn btn-secondary" (click)="load()">Try again</button></div>} @else {
@@ -22,7 +22,7 @@
         <strong>{{ order.total_price | currency:'EUR' }}</strong>
       </a>
     } @empty {
-      <div class="empty-state"><h3>No orders yet</h3><p>Discover food from local farms and place your first order.</p><a routerLink="/products" class="btn btn-primary">Explore products</a></div>
+      <div class="empty-state"><h3>No orders yet</h3><p>Discover products from local businesses and place your first order.</p><a routerLink="/products" class="btn btn-primary">Explore products</a></div>
     }
   </section>
   <section class="card dashboard-section"><h2>Know where your food comes from</h2><p class="text-muted">Open a product to explore its origin and production details before you order.</p><a routerLink="/products" class="stat-link">Explore local food →</a></section>

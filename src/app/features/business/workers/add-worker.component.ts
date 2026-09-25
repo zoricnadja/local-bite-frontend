@@ -4,7 +4,7 @@ import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { FarmService } from '../../../core/services/farm.service';
+import { BusinessService } from '../../../core/services/business.service';
 import {RegisterRequest, WorkerOut} from '../../../shared/models/auth.models';
 import { AuthService } from '../../../core/auth/auth.service';
 
@@ -17,13 +17,13 @@ import { AuthService } from '../../../core/auth/auth.service';
 })
 export class AddWorkerComponent {
   private fb = new FormBuilder();
-  private farmApi = inject(FarmService);
+  private businessApi = inject(BusinessService);
   private auth = inject(AuthService);
 
   loading = signal(false);
   error = signal<string | null>(null);
   worker = signal<WorkerOut | null>(null);
-  farmId = this.auth.farmId;
+  businessId = this.auth.businessId;
 
   form = this.fb.group({
     // Account
@@ -45,7 +45,7 @@ export class AddWorkerComponent {
   if (this.form.invalid) { this.form.markAllAsTouched(); return; }
     this.loading.set(true);
     this.error.set('');
-    const fid = this.farmId()!
+    const fid = this.businessId()!
     const v = this.form.getRawValue();
     const req: RegisterRequest = {
       email:      v.email!,
@@ -57,7 +57,7 @@ export class AddWorkerComponent {
       phone:         v.phone         || undefined,
       date_of_birth: v.date_of_birth || undefined,
     };
-    this.farmApi.addWorker(fid, req).subscribe({
+    this.businessApi.addWorker(fid, req).subscribe({
       next: (res) => {
         this.worker.set(res.data);
         this.loading.set(false);

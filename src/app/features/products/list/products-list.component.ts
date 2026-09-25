@@ -1,3 +1,4 @@
+import { PRODUCT_TYPES, LEGACY_PRODUCT_TYPES } from '../../../shared/models/product-types';
 import { AuthenticatedMediaDirective } from '../../../core/auth/authenticated-media.directive';
 import { ActivatedRoute } from '@angular/router';
 import { ProducerService, Producer } from '../../../core/services/producer.service';
@@ -34,14 +35,9 @@ import {AuthService} from "../../../core/auth/auth.service";
                placeholder="Search products..." style="flex:1;min-width:200px" />
         <select class="form-control" style="width:auto" [(ngModel)]="typeFilter" (ngModelChange)="setPage(1)">
           <option value="">All types</option>
-          <option value="meat">Meat</option>
-          <option value="dairy">Dairy</option>
-          <option value="vegetable">Vegetable</option>
-          <option value="fruit">Fruit</option>
-          <option value="cheese">Cheese</option>
-          <option value="sausage">Sausage</option>
-          <option value="honey">Honey</option>
-          <option value="other">Other</option>
+          @for (type of productTypes; track type.value) {
+                  <option [value]="type.value">{{ type.label }}</option>
+                }
         </select>
         @if (authSvc.isCustomer()) {<select class="form-control" aria-label="Producer" style="width:auto" [(ngModel)]="producerFilter" (ngModelChange)="setPage(1)"><option value="">All producers</option>@for(p of producers(); track p.id){<option [value]="p.id">{{p.name}}</option>}</select>}
       </div>
@@ -70,7 +66,7 @@ import {AuthService} from "../../../core/auth/auth.service";
                 <span class="state-label" [attr.data-state]="p.status">{{stateLabel(p)}}</span>
               </div>
               <div class="product-body">
-                <div class="product-name">{{ p.name }}</div>@if(authSvc.isCustomer()){<p class="text-muted text-sm">{{producerName(p.farm_id)}}</p>}
+                <div class="product-name">{{ p.name }}</div>@if(authSvc.isCustomer()){<p class="text-muted text-sm">{{producerName(p.business_id)}}</p>}
                 @if (p.description) {
                   <div class="product-desc">{{ p.description }}</div>
                 }
@@ -82,7 +78,7 @@ import {AuthService} from "../../../core/auth/auth.service";
               <div class="product-actions" (click)="$event.stopPropagation()">
                 @if(p.status !== 'PRODUCTION'){<button *appCan="'manageProducts'" class="btn btn-sm btn-secondary" [disabled]="moving() === p.id" (click)="move(p)">Move to {{p.status === 'ON_SALE' ? 'Storage' : 'On sale'}}</button>}
                 <a *appCan="'manageProducts'" [routerLink]="p.status === 'PRODUCTION' ? ['/production',p.batch_id] : ['/products',p.id, 'edit']" class="icon-action" aria-label="Edit" title="Edit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m16 3 5 5-13 13H3v-5L16 3ZM13 6l5 5"/></svg></a>
-                <button *appCan="'deleteFarmData'" class="icon-action" [disabled]="p.status === 'PRODUCTION'" (click)="confirmDelete(p)" title="Delete" aria-label="Delete product"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/></svg></button>
+                <button *appCan="'deleteBusinessData'" class="icon-action" [disabled]="p.status === 'PRODUCTION'" (click)="confirmDelete(p)" title="Delete" aria-label="Delete product"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/></svg></button>
               </div>
             </div>
           }
@@ -122,6 +118,7 @@ import {AuthService} from "../../../core/auth/auth.service";
   `]
 })
 export class ProductsListComponent implements OnInit {
+  readonly productTypes = [...PRODUCT_TYPES, ...LEGACY_PRODUCT_TYPES];
   private svc = inject(ProductService);
   readonly authSvc = inject(AuthService);
 
@@ -157,7 +154,7 @@ export class ProductsListComponent implements OnInit {
         product_type: this.typeFilter || undefined,
         is_active: this.authSvc.isCustomer() ? true : undefined,
         status: this.authSvc.isCustomer() ? 'ON_SALE' : this.stateFilter || undefined,
-        farm_id: this.producerFilter || undefined,
+        business_id: this.producerFilter || undefined,
       }).subscribe({
         next: res => {
           let data = res.data
@@ -169,14 +166,14 @@ export class ProductsListComponent implements OnInit {
       });
     }
     else {
-      this.svc.listByFarm({
+      this.svc.listByBusiness({
         page: this.page(),
         limit: this.pageSize,
         search: this.search || undefined,
         product_type: this.typeFilter || undefined,
         is_active: this.authSvc.isCustomer() ? true : undefined,
         status: this.authSvc.isCustomer() ? 'ON_SALE' : this.stateFilter || undefined,
-        farm_id: this.producerFilter || undefined,
+        business_id: this.producerFilter || undefined,
       }).subscribe({
         next: res => {
           let data = res.data

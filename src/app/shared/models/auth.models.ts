@@ -1,8 +1,8 @@
 export interface User {
   id: string;
   email: string;
-  role: 'SystemAdmin' | 'FarmOwner' | 'Worker' | 'Customer';
-  farm_id: string | null;
+  role: 'SystemAdmin' | 'BusinessOwner' | 'Worker' | 'Customer';
+  business_id: string | null;
 
   // Required profile
   first_name: string;
@@ -18,7 +18,7 @@ export interface User {
   updated_at: string;
 }
 
-export interface Farm {
+export interface Business {
   id:       string;
   name:     string;
   owner_id: string;
@@ -80,10 +80,10 @@ export interface WorkerOut {
   id:      string;
   email:   string;
   role:    string;
-  farm_id: string;
+  business_id: string;
 }
 
-export interface UpdateFarmRequest {
+export interface UpdateBusinessRequest {
   name?:        string;
   address?:     string;
   phone?:       string;
@@ -91,7 +91,7 @@ export interface UpdateFarmRequest {
   website?:     string;
 }
 
-export interface CreateFarmRequest {
+export interface CreateBusinessRequest {
   name:       string;
   address:    string;
   phone?:     string;
@@ -99,8 +99,8 @@ export interface CreateFarmRequest {
   website?:   string;
 }
 
-export interface CreateFarmResult {
-  farm: Farm;
+export interface CreateBusinessResult {
+  business: Business;
   token: string;
 }
 
@@ -113,5 +113,5 @@ export interface WorkerOut {
   id: string;
   email: string;
   role: string;
-  farm_id: string;
+  business_id: string;
 }

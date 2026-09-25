@@ -1,7 +1,7 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { FarmService } from '../../../core/services/farm.service';
+import { BusinessService } from '../../../core/services/business.service';
 import { WorkerOut } from '../../../shared/models/auth.models';
 import { AuthService } from '../../../core/auth/auth.service';
 
@@ -13,10 +13,10 @@ import { AuthService } from '../../../core/auth/auth.service';
     <div class="page">
       <div class="header">
         <h1 class="page-title">Workers</h1>
-        <a class="btn btn-primary" [routerLink]="['/farm','workers','add']">Add worker</a>
+        <a class="btn btn-primary" [routerLink]="['/business','workers','add']">Add worker</a>
       </div>
 
-      <ng-container *ngIf="farmId() as fid; else noFarm">
+      <ng-container *ngIf="businessId() as fid; else noBusiness">
         <div class="card" *ngIf="!loading(); else loadingTpl">
           <table class="table" *ngIf="workers().length; else emptyTpl">
             <thead>
@@ -44,9 +44,9 @@ import { AuthService } from '../../../core/auth/auth.service';
         <div class="alert error" *ngIf="error()">{{ error() }}</div>
       </ng-container>
 
-      <ng-template #noFarm>
+      <ng-template #noBusiness>
         <div class="alert error">
-          You don't have a farm assigned yet. Create a farm first, then reopen this page.
+          You don't have a business assigned yet. Add your business first, then reopen this page.
         </div>
       </ng-template>
     </div>
@@ -67,16 +67,16 @@ import { AuthService } from '../../../core/auth/auth.service';
   ]
 })
 export class WorkersListComponent implements OnInit {
-  private farmApi = inject(FarmService);
+  private businessApi = inject(BusinessService);
   private auth = inject(AuthService);
 
-  farmId = this.auth.farmId; // signal<string | null>
+  businessId = this.auth.businessId; // signal<string | null>
   loading = signal(true);
   error = signal<string | null>(null);
   workers = signal<WorkerOut[]>([]);
 
   ngOnInit(): void {
-    const fid = this.farmId();
+    const fid = this.businessId();
     if (!fid) {
       this.loading.set(false);
       return;
@@ -87,7 +87,7 @@ export class WorkersListComponent implements OnInit {
   private load(fid: string) {
     this.loading.set(true);
     this.error.set(null);
-    this.farmApi.listWorkers(fid).subscribe({
+    this.businessApi.listWorkers(fid).subscribe({
       next: res => {
         this.workers.set(res.data);
         this.loading.set(false);

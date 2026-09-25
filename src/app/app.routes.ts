@@ -45,10 +45,10 @@ export const routes: Routes = [
       import('./features/products/products.routes').then(m => m.PRODUCTS_ROUTES),
   },
   {
-    path: 'farm',
+    path: 'business',
     canActivate: [authGuard],
     loadChildren: () =>
-      import('./features/farm/farm.routes').then(m => m.FARM_ROUTES),
+      import('./features/business/business.routes').then(m => m.BUSINESS_ROUTES),
   },
   {
     path: 'orders',

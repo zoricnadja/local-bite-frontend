@@ -1,3 +1,4 @@
+import { productTypeOptions } from '../../../shared/models/product-types';
 import { requiredText } from '../../../shared/form-validators';
 import { FieldErrorsDirective } from '../../../shared/field-errors.directive';
 import { CanDirective } from '../../../core/auth/can.directive';
@@ -30,7 +31,7 @@ import { CdkTrapFocus } from '@angular/cdk/a11y';
           </div>
           <div class="actions">
             <a [routerLink]="['/production', batch()!.id, 'edit']" class="icon-action" aria-label="Edit" title="Edit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m16 3 5 5-13 13H3v-5L16 3ZM13 6l5 5"/></svg></a>
-            <button *appCan="'deleteFarmData'" class="icon-action" (click)="confirmDelete()" aria-label="Delete" title="Delete"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/></svg></button>
+            <button *appCan="'deleteBusinessData'" class="icon-action" (click)="confirmDelete()" aria-label="Delete" title="Delete"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/></svg></button>
           </div>
         </div>
 
@@ -67,7 +68,7 @@ import { CdkTrapFocus } from '@angular/cdk/a11y';
               @if(output.planned){<p class="text-muted">Planned: {{output.planned.name}} · {{output.planned.quantity}} {{output.planned.unit}} · €{{output.planned.price}}</p>}
               <div class="form-grid">
                 <label class="form-group">Name *<input class="form-control" required [name]="'name'+i" [(ngModel)]="output.name" /></label>
-                <label class="form-group">Type *<select class="form-control" required [name]="'type'+i" [(ngModel)]="output.product_type">@for(t of outputTypes;track t){<option [value]="t">{{t}}</option>}</select></label>
+                <label class="form-group">Type *<select class="form-control" required [name]="'type'+i" [(ngModel)]="output.product_type">@for(t of productTypeOptions(output.product_type);track t.value){<option [value]="t.value">{{t.label}}</option>}</select></label>
                 <label class="form-group">{{completing ? 'Actual quantity' : 'Planned quantity'}} *<input class="form-control" type="number" required min="0.001" step="0.001" [name]="'quantity'+i" [(ngModel)]="output.quantity" /></label>
                 <label class="form-group">Unit *<select class="form-control" required [name]="'unit'+i" [(ngModel)]="output.unit">@for(u of ['kg','g','l','ml','pcs'];track u){<option [value]="u">{{u}}</option>}</select></label>
                 <label class="form-group">Price *<input class="form-control" type="number" required min="0" step="0.01" [name]="'price'+i" [(ngModel)]="output.price" /></label>
@@ -318,7 +319,7 @@ export class ProductionDetailComponent implements OnInit {
 
   showCompletion=false;
   savingStatus=signal(false); statusError=signal('');
-  outputTypes=['meat','dairy','vegetable','fruit','cheese','sausage','honey','other'];
+  readonly productTypeOptions = productTypeOptions;
   completing=false; draftOutputs: ProductionOutput[]=[]; outputEndDate='';
   openOutputs(completing:boolean) {
     this.completing=completing; this.statusError.set('');

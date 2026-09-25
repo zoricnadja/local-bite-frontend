@@ -25,7 +25,7 @@ export interface ProductionBatch {
   outputs: ProductionOutput[];
   output_name?: string; output_type?: string; output_quantity?: number; output_unit?: string; output_expiry_date?: string;
   id: string;
-  farm_id: string;
+  business_id: string;
   name: string;
   start_date: string | null;
   end_date: string | null;

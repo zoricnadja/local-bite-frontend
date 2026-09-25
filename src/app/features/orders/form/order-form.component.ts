@@ -160,7 +160,7 @@ export class OrderFormComponent implements OnInit {
   ngOnInit() {this.producerSvc.list().subscribe(r=>this.producers.set(r.data)); this.loadProducts();}
   loadProducts() {
     this.loadingProducts.set(true);
-    this.productSvc.list({ active_only: true, limit: 100, farm_id:this.producerFilter||undefined }).subscribe({
+    this.productSvc.list({ active_only: true, limit: 100, business_id:this.producerFilter||undefined }).subscribe({
       next:  res => {
         
         this.products.set((res.data).data); this.loadingProducts.set(false); },
@@ -214,7 +214,7 @@ export class OrderFormComponent implements OnInit {
         if (res.data.orders.length === 1) {
           this.router.navigate(['/orders', res.data.orders[0].id]);
         } else {
-          this.router.navigate(['/orders']); // multiple farms — go to list
+          this.router.navigate(['/orders']); // multiple businesses — go to list
         }
       },
       error: (e) => { this.error.set(e.error?.error ?? 'Failed to place order'); this.submitting.set(false); },

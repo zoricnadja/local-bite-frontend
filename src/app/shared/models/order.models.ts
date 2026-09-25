@@ -13,7 +13,7 @@ export interface OrderItem {
 
 export interface Order {
   id: string;
-  farm_id: string;
+  business_id: string;
   customer_id: string | null;
   customer_name: string | null;
   customer_email: string | null;
@@ -42,7 +42,7 @@ export interface UpdateStatusRequest {
 }
 
 export interface OrderListQuery {
-  farm_id?: string;
+  business_id?: string;
   page?: number;
   limit?: number;
   status?: OrderStatus;

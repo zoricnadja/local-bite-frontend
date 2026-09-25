@@ -5,7 +5,7 @@ import { AppComponent } from './app';
 import { AuthService } from './core/auth/auth.service';
 
 describe('Role navigation', () => {
-  it('shows shopping navigation without farm administration to customers', async () => {
+  it('shows shopping navigation without business administration to customers', async () => {
     await TestBed.configureTestingModule({
       imports: [AppComponent],
       providers: [provideRouter([]), { provide: AuthService, useValue: {

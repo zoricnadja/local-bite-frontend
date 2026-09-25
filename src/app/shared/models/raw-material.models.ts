@@ -1,6 +1,6 @@
 export interface RawMaterial {
   id: string;
-  farm_id: string;
+  business_id: string;
   name: string;
   material_type: string;
   quantity: number;

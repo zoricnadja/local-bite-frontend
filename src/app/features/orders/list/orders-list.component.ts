@@ -68,7 +68,7 @@ import {AuthService} from "../../../core/auth/auth.service";
                     [attr.aria-label]="'Open order #' + o.id.slice(0,8)">
                   <td><span class="font-mono text-sm text-muted">#{{ o.id.slice(0,8) }}</span></td>
                   <td>
-                    <div style="font-weight:600">{{ authSvc.isCustomer() ? producerName(o.farm_id) : (o.customer_name ?? 'Customer') }}</div>
+                    <div style="font-weight:600">{{ authSvc.isCustomer() ? producerName(o.business_id) : (o.customer_name ?? 'Customer') }}</div>
                     @if (!authSvc.isCustomer() && o.customer_email) {
                       <div class="text-muted text-sm">{{ o.customer_email }}</div>
                     }
@@ -79,7 +79,7 @@ import {AuthService} from "../../../core/auth/auth.service";
                   <td class="text-muted text-sm">{{ o.created_at | date:'mediumDate' }}</td>
                   <td>
                     <div class="actions" (click)="$event.stopPropagation()">
-                      <button *appCan="'deleteFarmData'" class="icon-action" (click)="confirmDelete(o)"
+                      <button *appCan="'deleteBusinessData'" class="icon-action" (click)="confirmDelete(o)"
                               [disabled]="o.status !== 'PENDING' && o.status !== 'CANCELLED'"
                               title="Delete" aria-label="Delete"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/></svg></button>
                     </div>
@@ -129,7 +129,7 @@ export class OrdersListComponent implements OnInit {
     this.loading.set(true);
     if (this.authSvc.isCustomer()) {
       this.svc.getAllByUser(this.authSvc.id()!, {
-        farm_id: this.producerFilter||undefined,
+        business_id: this.producerFilter||undefined,
         page:   this.page(),
         limit:  this.pageSize,
         search: this.search       || undefined,

@@ -14,8 +14,8 @@
 .meta        { color:var(--text-muted,#6b7280); font-size:.85rem; margin-top:2px; }
 .ml-auto     { margin-left:auto; }
 
-/* ── Farm header ── */
-.farm-header  { display:flex; align-items:center; justify-content:space-between; margin-top:12px; }
+/* ── Business header ── */
+.business-header  { display:flex; align-items:center; justify-content:space-between; margin-top:12px; }
 
 /* ── Fields ── */
 .field-grid  { display:grid; grid-template-columns:1fr 1fr; gap:14px; }

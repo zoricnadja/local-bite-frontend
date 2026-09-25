@@ -3,6 +3,7 @@
 
     <!-- ── User card ─────────────────────────────────────────────────────────── -->
     <div class="card">
+        <h2 class="section-title">Personal profile</h2>
 
         <!-- VIEW mode -->
         @if (!editingUser()) {
@@ -12,7 +13,7 @@
                 </div>
                 <div>
                     <div class="full-name">{{ currentUser()?.first_name }} {{ currentUser()?.last_name }}</div>
-                    <div class="meta">{{ currentUser()?.role }}</div>
+                    <div class="meta">{{ currentUser()?.role === 'BusinessOwner' ? 'Business owner' : currentUser()?.role }}</div>
                 </div>
                 <button class="icon-action ml-auto" (click)="startEditUser()" aria-label="Edit" title="Edit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m16 3 5 5-13 13H3v-5L16 3ZM13 6l5 5"/></svg></button>
             </div>
@@ -109,27 +110,27 @@
         }
     </div>
 
-    <!-- ── Farm card ─────────────────────────────────────────────────────────── -->
-    <div class="card" *appCan="'viewFarm'">
-        <h2 class="section-title">Farm</h2>
+    <!-- ── Business card ─────────────────────────────────────────────────────────── -->
+    <div class="card" *appCan="'viewBusiness'">
+        <h2 class="section-title">Business profile</h2>
 
-        @if (farmLoading()) {
-            <div class="hint">Loading farm…</div>
+        @if (businessLoading()) {
+            <div class="hint">Loading business…</div>
 
-        } @else if (farmError()) {
-            <div class="error-msg">{{ farmError() }}</div>
+        } @else if (businessError()) {
+            <div class="error-msg">{{ businessError() }}</div>
 
-        } @else if (!farmId()) {
-            <div class="empty-state">You don't have a farm yet.</div>
-            <a *appCan="'manageFarm'" class="icon-action" style="margin-top:12px" routerLink="/farm/create" aria-label="Add farm" title="Add farm"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></a>
+        } @else if (!businessId()) {
+            <div class="empty-state">You don't have a business yet.</div>
+            <a *appCan="'manageBusiness'" class="icon-action" style="margin-top:12px" routerLink="/business/create" aria-label="Add your business" title="Add your business"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></a>
 
-        } @else if (farm(); as f) {
+        } @else if (business(); as f) {
 
             <!-- VIEW mode -->
-            @if (!editingFarm()) {
-                <div class="farm-header">
+            @if (!editingBusiness()) {
+                <div class="business-header">
                     <div class="full-name">{{ f.name }}</div>
-                    <button *appCan="'manageFarm'" class="icon-action" (click)="startEditFarm()" aria-label="Edit" title="Edit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m16 3 5 5-13 13H3v-5L16 3ZM13 6l5 5"/></svg></button>
+                    <button *appCan="'manageBusiness'" class="icon-action" (click)="startEditBusiness()" aria-label="Edit" title="Edit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m16 3 5 5-13 13H3v-5L16 3ZM13 6l5 5"/></svg></button>
                 </div>
 
                 <div class="field-grid" style="margin-top:12px">
@@ -161,16 +162,16 @@
                     </div>
                 </div>
 
-                <!-- Delete farm -->
-                <div class="danger-zone" *appCan="'manageFarm'">
+                <!-- Delete business -->
+                <div class="danger-zone" *appCan="'manageBusiness'">
 
-                    @if (!confirmDeleteFarm()) {
-                        <button class="icon-action" (click)="confirmDeleteFarm.set(true)" aria-label="Delete farm" title="Delete farm"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/></svg></button>
+                    @if (!confirmDeleteBusiness()) {
+                        <button class="icon-action" (click)="confirmDeleteBusiness.set(true)" aria-label="Delete business" title="Delete business"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/></svg></button>
                     } @else {
                         <div class="confirm-row">
                             <span>Are you sure? This cannot be undone.</span>
-                            <button class="icon-action" (click)="deleteFarm()" [disabled]="deleting()" aria-label="Confirm delete farm" title="Confirm delete farm"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/></svg></button>
-                            <button class="btn btn-ghost" (click)="confirmDeleteFarm.set(false)">Cancel</button>
+                            <button class="icon-action" (click)="deleteBusiness()" [disabled]="deleting()" aria-label="Confirm delete business" title="Confirm delete business"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/></svg></button>
+                            <button class="btn btn-ghost" (click)="confirmDeleteBusiness.set(false)">Cancel</button>
                         </div>
                         @if (deleteError()) {
                             <div class="error-msg">{{ deleteError() }}</div>
@@ -180,10 +181,10 @@
             }
 
             <!-- EDIT mode -->
-            @if (editingFarm()) {
-                <form [formGroup]="farmForm" (ngSubmit)="saveFarm()">
+            @if (editingBusiness()) {
+                <form [formGroup]="businessForm" (ngSubmit)="saveBusiness()">
                     <div class="form-group">
-                        <label class="form-label">Farm name *</label>
+                        <label class="form-label">Business name *</label>
                         <input class="form-control" formControlName="name" />
                     </div>
                     <div class="form-group">
@@ -206,15 +207,15 @@
                         <textarea class="form-control" formControlName="description" rows="3"></textarea>
                     </div>
 
-                    @if (farmSaveError()) {
-                        <div class="error-msg">{{ farmSaveError() }}</div>
+                    @if (businessSaveError()) {
+                        <div class="error-msg">{{ businessSaveError() }}</div>
                     }
 
                     <div class="btn-row">
-                        <button class="btn btn-primary" type="submit" [disabled]="farmSaving()">
-                            {{ farmSaving() ? 'Saving…' : 'Save changes' }}
+                        <button class="btn btn-primary" type="submit" [disabled]="businessSaving()">
+                            {{ businessSaving() ? 'Saving…' : 'Save changes' }}
                         </button>
-                        <button class="btn btn-ghost" type="button" (click)="cancelEditFarm()">Cancel</button>
+                        <button class="btn btn-ghost" type="button" (click)="cancelEditBusiness()">Cancel</button>
                     </div>
                 </form>
             }
